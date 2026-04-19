@@ -1,0 +1,52 @@
+Oireachtas Explorer
+===================
+
+This application consumes the Oireachtas Open Data API
+(https://api.oireachtas.ie/) and displays information derived from it.
+
+Parliamentary data (debates, divisions, questions, legislation, member
+records) is:
+
+  Copyright (c) Houses of the Oireachtas
+
+and is reused under the Oireachtas (Open Data) PSI Licence, which
+incorporates the Creative Commons Attribution 4.0 International Licence
+(CC-BY 4.0):
+
+  Licence:    https://www.oireachtas.ie/en/open-data/license/
+  CC-BY 4.0:  https://creativecommons.org/licenses/by/4.0/legalcode
+
+Modifications
+-------------
+The data displayed by this application has been:
+
+  - filtered, paginated, and re-ordered for display;
+  - transformed from the Oireachtas XML/JSON schemas into derived
+    summaries (e.g. vote breakdowns, activity totals, speaker filters);
+  - combined across multiple API endpoints.
+
+It may therefore not reflect the complete or most current official
+record. Authoritative records are available at https://www.oireachtas.ie/.
+
+Disclaimer of warranties
+------------------------
+The parliamentary data is provided by the Houses of the Oireachtas
+"as-is" and without warranties of any kind, express or implied, to
+the fullest extent permitted by the licence and applicable law. See
+the licence texts above for full terms.
+
+Unofficial project
+------------------
+Oireachtas Explorer is an independent project. It is not affiliated
+with, endorsed by, or connected to the Houses of the Oireachtas, the
+Houses of the Oireachtas Commission, or the Houses of the Oireachtas
+Service. Official crests, insignia, and emblems (including the harp)
+are not used by this application and remain outside the scope of the
+Oireachtas (Open Data) PSI Licence.
+
+Application source code
+-----------------------
+The source code of this application is distributed separately from
+the parliamentary data it displays and is governed by its own licence
+(see LICENSE or package.json). Nothing in this NOTICE affects those
+terms.
