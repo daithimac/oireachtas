@@ -11,7 +11,7 @@ interface QuestionsListProps {
   houseNo: number;
 }
 
-type RoleFilter = 'all' | 'asked';
+type TypeFilter = 'all' | 'oral' | 'written';
 
 const PAGE_SIZE = 20;
 
@@ -27,12 +27,7 @@ function QuestionItem({ q }: { q: Question }) {
     setLoading(true);
     try {
       const transcript = await fetchDebateTranscript(q.xmlUri, q.debateSectionUri);
-      const answers = transcript.filter(s => {
-        const speakerLower = s.speakerName.toLowerCase();
-        const askerLower = q.askedBy.toLowerCase();
-        return !(askerLower && speakerLower.includes(askerLower.replace('deputy ', '').trim()));
-      });
-      setResponses(answers);
+      setResponses(transcript);
     } catch (err) {
       console.error('Failed to load response transcript', err);
     } finally {
@@ -101,14 +96,18 @@ function QuestionItem({ q }: { q: Question }) {
 }
 
 export function QuestionsList({ memberUri, chamber, houseNo }: QuestionsListProps) {
-  const [roleFilter, setRoleFilter] = useState<RoleFilter>('all');
+  const [typeFilter, setTypeFilter] = useState<TypeFilter>('all');
 
   const fetcher = useCallback((skip: number, limit: number, signal?: AbortSignal) =>
     fetchQuestions(memberUri, limit, skip, chamber, houseNo, signal), [memberUri, chamber, houseNo]);
 
   const { items: allQuestions, total, loading, error, loadingMore, handleLoadMore } = usePaginatedList<Question>(fetcher, 'questions', PAGE_SIZE);
 
-  const filtered = roleFilter === 'all' ? allQuestions : allQuestions.filter((q) => q.role === roleFilter);
+  const filtered = typeFilter === 'all' ? allQuestions : allQuestions.filter((q) =>
+    typeFilter === 'oral'
+      ? q.questionType.toLowerCase().includes('oral')
+      : q.questionType.toLowerCase().includes('written')
+  );
 
   if (loading) {
     return (
@@ -124,12 +123,12 @@ export function QuestionsList({ memberUri, chamber, houseNo }: QuestionsListProp
 
   return (
     <>
-      <div className="questions-filters" role="group" aria-label="Filter questions by role">
-        {(['all', 'asked'] as RoleFilter[]).map((f) => (
+      <div className="questions-filters" role="group" aria-label="Filter questions by type">
+        {(['all', 'oral', 'written'] as TypeFilter[]).map((f) => (
           <button key={f} type="button"
-            className={`filter-btn ${roleFilter === f ? 'filter-btn--active' : ''}`}
-            onClick={() => { setRoleFilter(f); }} aria-pressed={roleFilter === f}>
-            {f === 'all' ? 'All' : 'Asked by Member'}
+            className={`filter-btn ${typeFilter === f ? 'filter-btn--active' : ''}`}
+            onClick={() => { setTypeFilter(f); }} aria-pressed={typeFilter === f}>
+            {f === 'all' ? 'All' : f === 'oral' ? 'Oral' : 'Written'}
           </button>
         ))}
         <span style={{ marginLeft: 'auto', fontSize: 13, color: 'var(--text3)', alignSelf: 'center' }}>
