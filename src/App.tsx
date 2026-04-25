@@ -257,38 +257,22 @@ export default function App() {
                 </div>
               </div>
 
-              {/* Bottom: constituency picker */}
-              <div className="home-grid" style={{ marginTop: 48 }}>
-                <div>
-                  <div className="section-hd">
-                    <div className="section-title">Browse by {chamber === 'seanad' ? 'Panel' : 'Constituency'}</div>
-                  </div>
-                  <ConstituencyPicker
-                    constituencies={constituencies}
-                    allMembers={allMembers}
-                    loading={loadingConstituencies}
-                    loadingMembers={loadingMembers}
-                    chamber={chamber}
-                    houseNo={houseNo}
-                    onSelect={handleSelectConstituency}
-                  />
+              {/* Debates CTA */}
+              <div style={{ marginTop: 48 }}>
+                <div className="section-hd">
+                  <div className="section-title">{label} Debates</div>
+                  <button className="section-link" onClick={() => { navigate({ kind: 'global-debates', houseNo }); }}>
+                    View all →
+                  </button>
                 </div>
-                <div>
-                  <div className="section-hd">
-                    <div className="section-title">{label} Debates</div>
-                    <button className="section-link" onClick={() => { navigate({ kind: 'global-debates', houseNo }); }}>
-                      View all →
-                    </button>
-                  </div>
-                  <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--r-xl)', padding: '24px', boxShadow: 'var(--sh-sm)' }}>
-                    <p style={{ fontSize: 15, color: 'var(--text2)', lineHeight: 1.6, marginBottom: 20 }}>
-                      Read official transcripts from recent plenary and committee debates — speeches, votes and proceedings.
-                    </p>
-                    <button className="bill-pdf-btn" style={{ width: '100%', justifyContent: 'center' }}
-                      onClick={() => { navigate({ kind: 'global-debates', houseNo }); }}>
-                      Browse All Debates
-                    </button>
-                  </div>
+                <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--r-xl)', padding: '24px', boxShadow: 'var(--sh-sm)' }}>
+                  <p style={{ fontSize: 15, color: 'var(--text2)', lineHeight: 1.6, marginBottom: 20 }}>
+                    Read official transcripts from recent plenary and committee debates — speeches, votes and proceedings.
+                  </p>
+                  <button className="bill-pdf-btn" style={{ width: '100%', justifyContent: 'center' }}
+                    onClick={() => { navigate({ kind: 'global-debates', houseNo }); }}>
+                    Browse All Debates
+                  </button>
                 </div>
               </div>
             </div>
