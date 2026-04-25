@@ -80,7 +80,9 @@ function BillStagebar({ stages }: { stages: StageNode[] }) {
 
 function PdfModal({ bill, onClose }: { bill: Bill; onClose: () => void }) {
   const [failed, setFailed] = useState(false);
-  const pdfUrl = `https://data.oireachtas.ie/akn/ie/act/${bill.billYear}/${bill.billNo}/eng/enacted/main.pdf`;
+  const pdfUrl = bill.versions?.find(v => v.pdfUri)?.pdfUri
+    ?? bill.relatedDocs?.find(d => d.pdfUri)?.pdfUri
+    ?? '';
 
   useEffect(() => {
     const h = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
@@ -176,6 +178,7 @@ export function BillsList({ memberUri, chamber, houseNo }: BillsListProps) {
         {allBills.map((b, i) => {
           const stages = buildStages(b);
           const isPrimary = b.sponsors.length > 0 && b.sponsors[0].toLowerCase().includes('primary');
+          const hasPdf = !!(b.versions?.some(v => v.pdfUri) ?? b.relatedDocs?.some(d => d.pdfUri));
           return (
             <div key={b.uri} className="bill-card" style={{ animationDelay: `${i * 0.05}s` }}>
               <div className="bill-card-badges">
@@ -193,14 +196,16 @@ export function BillsList({ memberUri, chamber, houseNo }: BillsListProps) {
               )}
               {stages.length > 0 && <BillStagebar stages={stages} />}
               <div className="bill-card-actions">
-                <button className="bill-pdf-btn" onClick={() => { setPdfBill(b); }}>
-                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-                    <polyline points="14 2 14 8 20 8"/>
-                    <line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>
-                  </svg>
-                  View Bill PDF
-                </button>
+                {hasPdf && (
+                  <button className="bill-pdf-btn" onClick={() => { setPdfBill(b); }}>
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                      <polyline points="14 2 14 8 20 8"/>
+                      <line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>
+                    </svg>
+                    View Bill PDF
+                  </button>
+                )}
                 {b.sponsors.length > 0 && (
                   <span style={{ fontSize: 12, color: 'var(--text4)' }}>
                     Sponsors: {b.sponsors.join(', ')}
