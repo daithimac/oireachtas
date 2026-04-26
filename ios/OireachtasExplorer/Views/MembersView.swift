@@ -61,6 +61,13 @@ struct MembersView: View {
             }
             .background(Color.cream)
             .navigationBarHidden(true)
+            .refreshable {
+                if selectedConstituency == nil {
+                    await vm.loadConstituencies()
+                } else if let c = selectedConstituency {
+                    await vm.loadMembers(for: c)
+                }
+            }
         }
     }
 
