@@ -64,6 +64,10 @@ export function MemberGrid({
             <MemberCard
               key={m.memberCode}
               member={m}
+              chamber={chamber}
+              houseNo={houseNo}
+              constituencyCode={constituencyCode}
+              constituencyName={constituencyName}
               onClick={() => { onSelectMember(m.uri, m.fullName, constituencyCode, constituencyName); }}
             />
           ))}

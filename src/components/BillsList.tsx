@@ -1,8 +1,11 @@
 import { useState, useCallback, useEffect } from 'react';
+import { Link } from 'lucide-react';
 import { usePaginatedList } from '../hooks/usePaginatedList';
 import { fetchLegislation } from '../api/oireachtas';
 import type { Bill, Chamber } from '../types';
 import { formatDateShort, billStatusLabel, billStatusClass } from '../utils/format';
+import { viewToHash } from '../utils/routing';
+import { ShareModal } from './ShareModal';
 
 interface BillsListProps {
   memberUri: string;
@@ -149,6 +152,7 @@ function PdfModal({ bill, onClose }: { bill: Bill; onClose: () => void }) {
 
 export function BillsList({ memberUri, chamber, houseNo }: BillsListProps) {
   const [pdfBill, setPdfBill] = useState<Bill | null>(null);
+  const [shareBill, setShareBill] = useState<Bill | null>(null);
 
   const fetcher = useCallback((skip: number, limit: number, signal?: AbortSignal) =>
     fetchLegislation(memberUri, limit, skip, chamber, houseNo, signal), [memberUri, chamber, houseNo]);
@@ -173,6 +177,7 @@ export function BillsList({ memberUri, chamber, houseNo }: BillsListProps) {
   return (
     <>
       {pdfBill && <PdfModal bill={pdfBill} onClose={() => { setPdfBill(null); }} />}
+      {shareBill && <ShareModal url={window.location.origin + window.location.pathname + viewToHash({ kind: 'bill-viewer', billNo: shareBill.billNo, billYear: shareBill.billYear }, chamber, houseNo)} onClose={() => { setShareBill(null); }} />}
 
       <div className="bill-list">
         {allBills.map((b, i) => {
@@ -180,7 +185,10 @@ export function BillsList({ memberUri, chamber, houseNo }: BillsListProps) {
           const isPrimary = b.sponsors.length > 0 && b.sponsors[0].toLowerCase().includes('primary');
           const hasPdf = !!(b.versions?.some(v => v.pdfUri) ?? b.relatedDocs?.some(d => d.pdfUri));
           return (
-            <div key={b.uri} className="bill-card" style={{ animationDelay: `${i * 0.05}s` }}>
+            <div key={b.uri} className="bill-card" style={{ animationDelay: `${i * 0.05}s`, position: 'relative' }}>
+              <button className="card-link-btn" onClick={() => { setShareBill(b); }} aria-label={`Copy link to ${b.title}`}>
+                <Link size={14} />
+              </button>
               <div className="bill-card-badges">
                 <span className={`bill-status-badge ${billStatusClass(b.status)}`}>
                   {billStatusLabel(b.status)}

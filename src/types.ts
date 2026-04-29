@@ -7,7 +7,7 @@ export type Chamber = 'dail' | 'seanad';
 export type View =
   | { kind: 'home' }
   | { kind: 'global-debates'; houseNo: number }
-  | { kind: 'debate-viewer'; xmlUri: string; debateSectionUri: string; title: string; focusMemberUri?: string }
+  | { kind: 'debate-viewer'; xmlUri: string; debateSectionUri: string; title: string; focusMemberUri?: string; speechIdx?: number }
   | { kind: 'bill-viewer'; billNo: string; billYear: string }
   | { kind: 'party'; partyName: string }
   | { kind: 'members'; constituencyCode: string; constituencyName: string }

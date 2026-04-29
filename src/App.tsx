@@ -370,6 +370,7 @@ export default function App() {
             debateSectionUri={view.debateSectionUri}
             title={view.title}
             focusMemberUri={view.focusMemberUri}
+            speechIdx={view.speechIdx}
             chamber={chamber}
             houseNo={houseNo}
             onBack={handleBack}

@@ -1,9 +1,11 @@
-import { useCallback } from 'react';
+import { useCallback, useState } from 'react';
+import { Link } from 'lucide-react';
 import { usePaginatedList } from '../hooks/usePaginatedList';
 import { fetchDebates } from '../api/oireachtas';
 import type { Chamber, Debate } from '../types';
 import { formatDateShort } from '../utils/format';
 import { viewToHash } from '../utils/routing';
+import { ShareModal } from './ShareModal';
 
 interface DebatesListProps {
   memberUri: string;
@@ -14,6 +16,7 @@ interface DebatesListProps {
 const PAGE_SIZE = 20;
 
 export function DebatesList({ memberUri, chamber, houseNo }: DebatesListProps) {
+  const [shareDebate, setShareDebate] = useState<Debate | null>(null);
 
   const fetcher = useCallback((skip: number, limit: number, signal?: AbortSignal) =>
     fetchDebates(memberUri, limit, skip, chamber, houseNo, signal), [memberUri, chamber, houseNo]);
@@ -37,13 +40,23 @@ export function DebatesList({ memberUri, chamber, houseNo }: DebatesListProps) {
     return <div className="empty-state">No debate records found.</div>;
   }
 
+  const debateShareUrl = shareDebate && shareDebate.xmlUri && shareDebate.debateSectionUri
+    ? window.location.origin + window.location.pathname + viewToHash({ kind: 'debate-viewer', xmlUri: shareDebate.xmlUri, debateSectionUri: shareDebate.debateSectionUri, title: shareDebate.title, focusMemberUri: memberUri }, chamber, houseNo)
+    : '';
+
   return (
     <>
+      {shareDebate && debateShareUrl && <ShareModal url={debateShareUrl} onClose={() => { setShareDebate(null); }} />}
       <div className="debate-list">
         {allDebates.map((d) => {
           const canRead = !!(d.xmlUri && d.debateSectionUri);
           return (
-            <div key={d.uri} className="debate-item">
+            <div key={d.uri} className="debate-item" style={{ position: 'relative' }}>
+              {canRead && (
+                <button className="card-link-btn" onClick={() => { setShareDebate(d); }} aria-label={`Copy link to ${d.title}`}>
+                  <Link size={14} />
+                </button>
+              )}
               <div className="debate-item__meta">
                 <span className="debate-item__date">{formatDateShort(d.date)}</span>
                 <span className="chamber-badge">{d.chamber}</span>

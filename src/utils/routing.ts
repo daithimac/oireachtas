@@ -6,7 +6,7 @@ export function viewToHash(view: View, chamber: Chamber, houseNo: number): strin
   switch (view.kind) {
     case 'home': return base;
     case 'global-debates': return `${base}/debates`;
-    case 'debate-viewer': return `${base}/debate/${encodeURIComponent(view.xmlUri)}/${encodeURIComponent(view.debateSectionUri)}/${encodeURIComponent(view.title)}${view.focusMemberUri ? '/' + encodeURIComponent(view.focusMemberUri) : ''}`;
+    case 'debate-viewer': return `${base}/debate/${encodeURIComponent(view.xmlUri)}/${encodeURIComponent(view.debateSectionUri)}/${encodeURIComponent(view.title)}${view.focusMemberUri ? '/' + encodeURIComponent(view.focusMemberUri) : ''}${view.speechIdx !== undefined ? '/' + view.speechIdx : ''}`;
     case 'bill-viewer': return `${base}/bill/${view.billYear}/${view.billNo}`;
     case 'party': return `${base}/party/${encodeURIComponent(view.partyName)}`;
     case 'members': return `${base}/constituency/${encodeURIComponent(view.constituencyCode)}/${encodeURIComponent(view.constituencyName)}`;
@@ -54,6 +54,7 @@ export function parseHash(hash: string): ParsedHash {
         debateSectionUri: decodeURIComponent(rest[2]),
         title: decodeURIComponent(rest[3] || 'Debate Transcript'),
         focusMemberUri: rest[4] ? decodeURIComponent(rest[4]) : undefined,
+        speechIdx: rest[5] !== undefined ? parseInt(rest[5], 10) : undefined,
       }
     };
   }

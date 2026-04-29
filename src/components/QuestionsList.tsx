@@ -1,9 +1,12 @@
 import { useState, useCallback } from 'react';
+import { Link } from 'lucide-react';
 import { usePaginatedList } from '../hooks/usePaginatedList';
 import { fetchQuestions } from '../api/oireachtas';
 import { fetchDebateTranscript } from '../api/transcripts';
 import type { Chamber, Question, SpeechSegment } from '../types';
 import { formatDateShort } from '../utils/format';
+import { viewToHash } from '../utils/routing';
+import { ShareModal } from './ShareModal';
 
 interface QuestionsListProps {
   memberUri: string;
@@ -15,10 +18,15 @@ type TypeFilter = 'all' | 'oral' | 'written';
 
 const PAGE_SIZE = 20;
 
-function QuestionItem({ q }: { q: Question }) {
+function QuestionItem({ q, chamber, houseNo, memberUri }: { q: Question; chamber: Chamber; houseNo: number; memberUri: string }) {
   const [expanded, setExpanded] = useState(false);
   const [loading, setLoading] = useState(false);
   const [responses, setResponses] = useState<SpeechSegment[]>([]);
+  const [shareOpen, setShareOpen] = useState(false);
+
+  const shareUrl = q.xmlUri && q.debateSectionUri
+    ? window.location.origin + window.location.pathname + viewToHash({ kind: 'debate-viewer', xmlUri: q.xmlUri, debateSectionUri: q.debateSectionUri, title: q.questionText.slice(0, 80), focusMemberUri: memberUri }, chamber, houseNo)
+    : window.location.origin + window.location.pathname + viewToHash({ kind: 'member', memberUri, memberName: q.askedBy, constituencyCode: '', constituencyName: '' }, chamber, houseNo);
 
   const handleExpand = async () => {
     if (expanded) { setExpanded(false); return; }
@@ -36,7 +44,12 @@ function QuestionItem({ q }: { q: Question }) {
   };
 
   return (
-    <div className="qa-card">
+    <>
+      {shareOpen && <ShareModal url={shareUrl} onClose={() => { setShareOpen(false); }} />}
+      <div className="qa-card" style={{ position: 'relative' }}>
+        <button className="card-link-btn" onClick={() => { setShareOpen(true); }} aria-label="Copy link to this question">
+          <Link size={14} />
+        </button>
       <div className="qa-header">
         <span className="type-badge">{q.questionType}</span>
         <span className={`role-badge role-badge--${q.role}`}>
@@ -91,7 +104,8 @@ function QuestionItem({ q }: { q: Question }) {
           )}
         </div>
       )}
-    </div>
+      </div>
+    </>
   );
 }
 
@@ -137,7 +151,7 @@ export function QuestionsList({ memberUri, chamber, houseNo }: QuestionsListProp
       </div>
 
       <div className="question-list">
-        {filtered.map((q) => <QuestionItem key={q.uri} q={q} />)}
+        {filtered.map((q) => <QuestionItem key={q.uri} q={q} chamber={chamber} houseNo={houseNo} memberUri={memberUri} />)}
       </div>
 
       {allQuestions.length < total && (
