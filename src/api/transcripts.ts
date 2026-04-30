@@ -1,7 +1,7 @@
 import { saveTranscript, getTranscript } from './transcriptDb';
 import type { SpeechSegment } from '../types';
 
-const PROXY_URL = 'https://corsproxy.io/?';
+const PROXY_URL = 'https://api.allorigins.win/raw?url=';
 const FETCH_TIMEOUT_MS = 15000;
 
 export class TranscriptFetchError extends Error {
