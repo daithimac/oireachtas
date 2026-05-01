@@ -138,8 +138,8 @@ export function MemberProfile({ memberUri, constituencyName, chamber, houseNo, o
   return (
     <div className="page">
       <div className="profile-page">
-        <button className="back-btn" onClick={onBack} aria-label={`Back to ${constituencyName} members`}>
-          ← Back to {constituencyName}
+        <button className="back-btn" onClick={onBack} aria-label="Back to previous page">
+          ← Back
         </button>
 
         <div className="profile-layout">

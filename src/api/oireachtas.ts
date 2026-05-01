@@ -103,32 +103,35 @@ export async function fetchConstituencies(
 
 // ── Members ────────────────────────────────────────────────────────────────────
 
-function extractParty(memberships: MembershipRaw[]): string {
-  // Prefer the active party with the most recent start date. Fall back to the
-  // party with the latest end date if none are active. Returning on the first
-  // active match (as a prior version did) can surface a stale affiliation when
-  // an older membership precedes the current one in the response.
-  let activeParty = '';
-  let activeStart = '';
-  let endedParty = '';
-  let endedDate = '';
+function extractParty(memberships: MembershipRaw[], chamber: Chamber, houseNo: number): string {
+  const houseRange = getHouseDateRange(chamber, houseNo);
+  let selectedParty = '';
+  let selectedStart = '';
+  let selectedEnd = '';
 
   for (const m of memberships) {
+    const h = m.membership.house;
+    if (h.houseCode !== chamber || h.houseNo !== String(houseNo)) continue;
+
     for (const p of m.membership.parties) {
       const start = p.party.dateRange?.start ?? '';
-      const end = p.party.dateRange?.end;
-      if (!end) {
-        if (start >= activeStart) {
-          activeStart = start;
-          activeParty = p.party.showAs;
+      const end = p.party.dateRange?.end ?? houseRange.end;
+      if (start <= houseRange.end && end >= houseRange.start) {
+        if (!selectedParty || start > selectedStart || (start === selectedStart && end > selectedEnd)) {
+          selectedParty = p.party.showAs;
+          selectedStart = start;
+          selectedEnd = end;
         }
-      } else if (end > endedDate) {
-        endedDate = end;
-        endedParty = p.party.showAs;
       }
     }
   }
-  return activeParty || endedParty || 'Independent';
+
+  if (selectedParty) return selectedParty;
+
+  const fallback = memberships
+    .find((m) => m.membership.house.houseCode === chamber && m.membership.house.houseNo === String(houseNo))
+    ?.membership.parties.at(-1)?.party.showAs;
+  return fallback ?? 'Independent';
 }
 
 function extractConstituency(memberships: MembershipRaw[]): { name: string; code: string } {
@@ -219,7 +222,9 @@ function toMember(r: MemberResult, chamber?: Chamber, houseNo?: number): Member 
     lastName: m.lastName,
     chamber: chamber ?? 'dail',
     houseNo: houseNo ?? defaultHouseNo(chamber ?? 'dail'),
-    party: extractParty(m.memberships),
+    party: chamber !== undefined && houseNo !== undefined
+      ? extractParty(m.memberships, chamber, houseNo)
+      : 'Independent',
     constituency: c.name,
     constituencyCode: c.code,
     photoUrl: getMemberPhotoUrl(m.uri),
