@@ -1,7 +1,7 @@
 import { useCallback, useState, useEffect, useMemo } from 'react';
 import { usePaginatedList } from '../hooks/usePaginatedList';
 import { useAsync } from '../hooks/useAsync';
-import { fetchCommitteeDebateIndex, fetchGlobalDebates, type ChamberType } from '../api/oireachtas';
+import { fetchCommitteeDebateIndex, fetchGlobalDebates, type ChamberType, type CommitteeDebateIndexItem } from '../api/oireachtas';
 import type { Chamber, Debate, View } from '../types';
 import { formatDateShort } from '../utils/format';
 import { getHouseDateRange, chamberName } from '../utils/dail';
@@ -12,6 +12,8 @@ interface GlobalDebatesListProps {
   houseNo: number;
   onNavigateToDebate: (view: View) => void;
 }
+
+const EMPTY_COMMITTEE_INDEX: CommitteeDebateIndexItem[] = [];
 
 // Extract a committee code from an Oireachtas debate URI.
 // Shape: https://data.oireachtas.ie/akn/ie/debateRecord/{chamber_or_committee}/{date}/...
@@ -32,6 +34,10 @@ function committeeCodeForDebate(d: Debate): string | null {
     if (code) return code;
   }
   return null;
+}
+
+function normalizeSearch(value: string): string {
+  return value.toLowerCase().replace(/[^\p{L}\p{N}]+/gu, ' ').trim();
 }
 
 interface DebateRow {
@@ -76,6 +82,7 @@ export function GlobalDebatesList({ chamber, houseNo, onNavigateToDebate }: Glob
   const [dateEnd, setDateEnd] = useState('');
   const [searchInput, setSearchInput] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
+  const [committeeQuery, setCommitteeQuery] = useState('');
 
   useEffect(() => {
     const range = getHouseDateRange(chamber, houseNo);
@@ -92,6 +99,7 @@ export function GlobalDebatesList({ chamber, houseNo, onNavigateToDebate }: Glob
   // Reset committee filter when chamber changes
   useEffect(() => {
     setCommitteeCode('');
+    setCommitteeQuery('');
   }, [chamberType]);
 
   const fetcher = useCallback((skip: number, limit: number, signal?: AbortSignal) =>
@@ -110,7 +118,24 @@ export function GlobalDebatesList({ chamber, houseNo, onNavigateToDebate }: Glob
     loading: loadingCommittees,
     error: committeeIndexError,
   } = useAsync(committeeFetcher, { enabled: chamberType === 'committee' });
-  const availableCommittees = committeeIndex ?? [];
+  const availableCommittees = committeeIndex ?? EMPTY_COMMITTEE_INDEX;
+
+  const selectedCommittee = useMemo(
+    () => availableCommittees.find((c) => c.code === committeeCode) ?? null,
+    [availableCommittees, committeeCode]
+  );
+
+  const committeeMatches = useMemo(() => {
+    const query = normalizeSearch(committeeQuery);
+    if (!query) return [];
+    return availableCommittees
+      .filter((c) => {
+        const name = normalizeSearch(c.name);
+        const code = normalizeSearch(c.code);
+        return name.includes(query) || code.includes(query);
+      })
+      .slice(0, 12);
+  }, [availableCommittees, committeeQuery]);
 
   const term = searchTerm.toLowerCase();
 
@@ -192,14 +217,57 @@ export function GlobalDebatesList({ chamber, houseNo, onNavigateToDebate }: Glob
             <label className="filter-label">
               Committee{loadingCommittees ? ' (loading)' : availableCommittees.length > 0 ? ` (${availableCommittees.length})` : ''}
             </label>
-            <select className="filter-select" value={committeeCode}
-              onChange={e => { setCommitteeCode(e.target.value); }}
-              disabled={loadingCommittees || availableCommittees.length === 0}>
-              <option value="">{loadingCommittees ? 'Loading committees...' : 'All committees'}</option>
-              {availableCommittees.map(c => (
-                <option key={c.code} value={c.code}>{c.name} ({c.count})</option>
-              ))}
-            </select>
+            <div className="committee-picker" role="combobox" aria-expanded={committeeMatches.length > 0} aria-haspopup="listbox" aria-owns="committee-results">
+              <input
+                className="filter-input"
+                type="search"
+                placeholder={loadingCommittees ? 'Loading committees...' : 'Search committees...'}
+                value={committeeQuery}
+                disabled={loadingCommittees || availableCommittees.length === 0}
+                onChange={(e) => {
+                  const next = e.target.value;
+                  setCommitteeQuery(next);
+                  if (committeeCode && normalizeSearch(next) !== normalizeSearch(selectedCommittee?.name ?? '')) {
+                    setCommitteeCode('');
+                  }
+                }}
+              />
+              {selectedCommittee && (
+                <button
+                  type="button"
+                  className="committee-picker__clear"
+                  onClick={() => {
+                    setCommitteeCode('');
+                    setCommitteeQuery('');
+                  }}>
+                  All committees
+                </button>
+              )}
+              {!selectedCommittee && !committeeQuery && !loadingCommittees && (
+                <div className="filter-help">Type to filter the cached committee list.</div>
+              )}
+              {committeeQuery && (
+                <div id="committee-results" className="committee-picker__results" role="listbox" aria-label="Matching committees">
+                  {committeeMatches.length > 0 ? committeeMatches.map((c) => (
+                    <button
+                      key={c.code}
+                      type="button"
+                      className={`committee-picker__option${c.code === committeeCode ? ' committee-picker__option--active' : ''}`}
+                      role="option"
+                      aria-selected={c.code === committeeCode}
+                      onClick={() => {
+                        setCommitteeCode(c.code);
+                        setCommitteeQuery(c.name);
+                      }}>
+                      <span>{c.name}</span>
+                      <small>{c.count}</small>
+                    </button>
+                  )) : (
+                    <div className="committee-picker__empty">No matching committees</div>
+                  )}
+                </div>
+              )}
+            </div>
             {committeeIndexError && (
               <div className="filter-help">Committee list unavailable; loaded debates can still be searched.</div>
             )}
