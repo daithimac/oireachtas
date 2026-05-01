@@ -174,12 +174,10 @@ export function MemberProfile({ memberUri, constituencyName, chamber, houseNo, o
               </div>
               <div className="profile-cst">{member.constituency || constituencyName}</div>
               {member.offices.length > 0 && member.offices.map((o, i) => (
-                <a key={i} className="profile-office-badge"
-                  href={viewToHash({ kind: 'offices' }, chamber, houseNo)}
-                  onClick={(e) => { e.preventDefault(); onNavigate({ kind: 'offices' }); }}
-                  style={{ textDecoration: 'none', cursor: 'pointer', display: 'inline-block' }}>
+                <span key={i} className="profile-office-badge"
+                  style={{ display: 'inline-block' }}>
                   {o.name}
-                </a>
+                </span>
               ))}
               <hr className="profile-divider" />
               <div className="profile-since-lbl">Member Since</div>

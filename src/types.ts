@@ -17,7 +17,7 @@ export type View =
   | { kind: 'members'; constituencyCode: string; constituencyName: string }
   | { kind: 'member'; memberUri: string; memberName: string; constituencyCode: string; constituencyName: string }
   | { kind: 'committee'; committeeUri: string; committeeName: string }
-  | { kind: 'offices' };
+  ;
 
 // ── API response wrapper ─────────────────────────────────────────────────────
 

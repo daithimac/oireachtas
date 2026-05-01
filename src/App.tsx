@@ -16,7 +16,6 @@ import { SavedItemsPage } from './components/SavedItemsPage';
 import { PublicCollectionPage } from './components/PublicCollectionPage';
 import { AttributionFooter } from './components/AttributionFooter';
 import { CommitteePage } from './components/CommitteePage';
-import { OfficesPage } from './components/OfficesPage';
 import { PartyBreakdown } from './components/PartyBreakdown';
 import { viewToHash, parseHash } from './utils/routing';
 import { formatDateShort, partyColor } from './utils/format';
@@ -61,21 +60,13 @@ function ordinalSuffix(value: number): string {
 }
 
 // Header search bar component
-function HeaderSearch({ constituencies, onSelect }: { constituencies: Constituency[]; onSelect: (code: string, name: string) => void }) {
+function HeaderSearch({
+  onSubmit,
+}: {
+  onSubmit: (query?: string) => void;
+}) {
   const [q, setQ] = useState('');
-  const [idx, setIdx] = useState(0);
   const ref = useRef<HTMLInputElement>(null);
-
-  const filtered = useMemo(() => {
-    const t = q.trim().toLowerCase();
-    if (!t) return [];
-    return constituencies.filter(c => c.name.toLowerCase().includes(t)).slice(0, 8);
-  }, [q, constituencies]);
-
-  function pick(c: Constituency) {
-    setQ('');
-    onSelect(c.code, c.name);
-  }
 
   return (
     <div className="app-header__search">
@@ -87,28 +78,26 @@ function HeaderSearch({ constituencies, onSelect }: { constituencies: Constituen
         ref={ref}
         type="text"
         value={q}
-        placeholder="Search constituency…"
-        onChange={(e) => { setQ(e.target.value); setIdx(0); }}
+        placeholder="Search members, debates, bills..."
+        onChange={(e) => { setQ(e.target.value); }}
         autoComplete="off"
         onKeyDown={(e) => {
-          if (e.key === 'ArrowDown') { e.preventDefault(); setIdx(i => Math.min(i + 1, filtered.length - 1)); }
-          else if (e.key === 'ArrowUp') { e.preventDefault(); setIdx(i => Math.max(i - 1, 0)); }
-          else if (e.key === 'Enter' && filtered[idx]) { pick(filtered[idx]); }
-          else if (e.key === 'Escape') { setQ(''); }
+          if (e.key === 'Enter') {
+            e.preventDefault();
+            const next = q.trim();
+            onSubmit(next || undefined);
+            if (next) setQ(next);
+          } else if (e.key === 'Escape') { setQ(''); }
         }}
       />
-      {q && filtered.length > 0 && (
-        <div className="app-header__search-dropdown">
-          {filtered.map((c, i) => (
-            <button key={c.code}
-              className={`app-header__search-item${i === idx ? ' app-header__search-item--active' : ''}`}
-              onMouseEnter={() => { setIdx(i); }}
-              onClick={() => { pick(c); }}>
-              {c.name}
-            </button>
-          ))}
-        </div>
-      )}
+      <button
+        type="button"
+        className="app-header__search-submit"
+        onClick={() => { onSubmit(q.trim() || undefined); }}
+        aria-label="Open global search"
+      >
+        Search
+      </button>
     </div>
   );
 }
@@ -163,6 +152,7 @@ export default function App() {
   const [view, setView] = useState<View>(initial.view);
   const [chamber, setChamber] = useState<Chamber>(initial.chamber);
   const [houseNo, setHouseNo] = useState(initial.houseNo);
+  const [cabinetExpanded, setCabinetExpanded] = useState(false);
   const [constituencies, setConstituencies] = useState<Constituency[]>([]);
   const [allMembers, setAllMembers] = useState<Member[]>([]);
   const [, setLoadingConstituencies] = useState(true);
@@ -252,6 +242,10 @@ export default function App() {
       );
   }, [allMembers, chamber]);
 
+  useEffect(() => {
+    setCabinetExpanded(false);
+  }, [chamber, houseNo]);
+
   function renderView() {
     if (constituenciesError && view.kind === 'home') {
       return (
@@ -275,12 +269,6 @@ export default function App() {
                   Every voice in Leinster House, searchable.
                 </p>
                 <HeroSearch constituencies={constituencies} onSelect={handleSelectConstituency} />
-                <button className="hero-link" onClick={() => { navigate({ kind: 'global-debates', houseNo }); }}>
-                  Browse all {label} debates
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M5 12h14M12 5l7 7-7 7" />
-                  </svg>
-                </button>
               </div>
             </div>
 
@@ -320,25 +308,37 @@ export default function App() {
 
               {chamber === 'dail' && (
                 <div style={{ marginTop: 48 }}>
-                  <div className="section-hd">
+                  <div className="section-hd section-hd--stack-mobile">
                     <div>
                       <div className="section-title">Cabinet</div>
                       <div className="section-sub">
                         {houseNo === latest ? 'Current government appointments' : `Government office holders during the ${houseNo}${ordinalSuffix(houseNo)} Dáil`}
                       </div>
                     </div>
-                    <button className="section-link" onClick={() => { navigate({ kind: 'offices' }); }}>
-                      View all offices →
-                    </button>
+                    <div className="section-actions">
+                      <button
+                        type="button"
+                        className="section-toggle"
+                        aria-expanded={cabinetExpanded}
+                        aria-controls="cabinet-section-panel"
+                        onClick={() => { setCabinetExpanded((open) => !open); }}
+                      >
+                        {cabinetExpanded ? 'Hide cabinet' : `Show cabinet${cabinetMembers.length > 0 ? ` (${cabinetMembers.length})` : ''}`}
+                      </button>
+                    </div>
                   </div>
 
-                  {loadingMembers ? (
+                  {!cabinetExpanded ? (
+                    <div className="cabinet-collapsed-note">
+                      Expand to browse cabinet office holders for this Dáil.
+                    </div>
+                  ) : loadingMembers ? (
                     <div className="loading-state" role="status" aria-live="polite">
                       <div className="spinner" aria-hidden="true" />
                       <span>Loading cabinet members…</span>
                     </div>
                   ) : cabinetMembers.length > 0 ? (
-                    <div className="cabinet-grid">
+                    <div id="cabinet-section-panel" className="cabinet-grid">
                       {cabinetMembers.map(({ member, offices }) => (
                         <button
                           key={member.uri}
@@ -382,7 +382,7 @@ export default function App() {
                       ))}
                     </div>
                   ) : (
-                    <div className="empty-state">
+                    <div id="cabinet-section-panel" className="empty-state">
                       <p>No cabinet appointments were found for this Dáil.</p>
                     </div>
                   )}
@@ -434,18 +434,6 @@ export default function App() {
             houseNo={houseNo}
             onBack={handleBack}
             onNavigate={navigate}
-          />
-        );
-
-      case 'offices':
-        return (
-          <OfficesPage
-            chamber={chamber}
-            houseNo={houseNo}
-            allMembers={allMembers}
-            loadingAllMembers={loadingMembers}
-            onSelectMember={handleSelectMember}
-            onBack={handleBack}
           />
         );
 
@@ -567,10 +555,9 @@ export default function App() {
           <span className="app-header__title">Oireachtas Explorer</span>
         </button>
 
-        <HeaderSearch constituencies={constituencies} onSelect={handleSelectConstituency} />
+        <HeaderSearch onSubmit={(query) => { navigate({ kind: 'search', query }); }} />
 
         <nav className="app-header__nav" aria-label="Research tools">
-          <button type="button" onClick={() => { navigate({ kind: 'search' }); }}>Search</button>
           <button type="button" onClick={() => { navigate({ kind: 'compare' }); }}>Compare</button>
           <button type="button" onClick={() => { navigate({ kind: 'saved' }); }}>Saved</button>
         </nav>

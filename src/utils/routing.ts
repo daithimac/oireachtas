@@ -16,7 +16,6 @@ export function viewToHash(view: View, chamber: Chamber, houseNo: number): strin
     case 'members': return `${base}/constituency/${encodeURIComponent(view.constituencyCode)}/${encodeURIComponent(view.constituencyName)}`;
     case 'member': return `${base}/member/${encodeURIComponent(view.memberUri)}/${encodeURIComponent(view.memberName)}/${encodeURIComponent(view.constituencyCode)}/${encodeURIComponent(view.constituencyName)}`;
     case 'committee': return `${base}/committee/${encodeURIComponent(view.committeeUri)}/${encodeURIComponent(view.committeeName)}`;
-    case 'offices': return `${base}/offices`;
   }
 }
 
@@ -106,9 +105,6 @@ export function parseHash(hash: string): ParsedHash {
         constituencyName: decodeURIComponent(rest[4] ?? ''),
       },
     };
-  }
-  if (rest[0] === 'offices') {
-    return { chamber, houseNo, view: { kind: 'offices' } };
   }
   if (rest[0] === 'committee' && rest[1]) {
     return {
