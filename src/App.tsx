@@ -201,8 +201,12 @@ export default function App() {
   }, [navigate]);
 
   const handleSelectMember = useCallback(
-    (memberUri: string, memberName: string, constituencyCode: string, constituencyName: string) => {
-      navigate({ kind: 'member', memberUri, memberName, constituencyCode, constituencyName });
+    (memberUri: string, memberName: string, constituencyCode: string, constituencyName: string, targetChamber?: Chamber, targetHouseNo?: number) => {
+      navigate(
+        { kind: 'member', memberUri, memberName, constituencyCode, constituencyName },
+        targetHouseNo,
+        targetChamber
+      );
     }, [navigate]);
 
   const handleBack = useCallback(() => { window.history.back(); }, []);
@@ -328,11 +332,7 @@ export default function App() {
                     </div>
                   </div>
 
-                  {!cabinetExpanded ? (
-                    <div className="cabinet-collapsed-note">
-                      Expand to browse cabinet office holders for this Dáil.
-                    </div>
-                  ) : loadingMembers ? (
+                  {cabinetExpanded ? loadingMembers ? (
                     <div className="loading-state" role="status" aria-live="polite">
                       <div className="spinner" aria-hidden="true" />
                       <span>Loading cabinet members…</span>
@@ -385,7 +385,7 @@ export default function App() {
                     <div id="cabinet-section-panel" className="empty-state">
                       <p>No cabinet appointments were found for this Dáil.</p>
                     </div>
-                  )}
+                  ) : null}
                 </div>
               )}
 

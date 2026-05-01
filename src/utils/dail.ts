@@ -30,7 +30,7 @@ export const LATEST_DAIL = 34;
 
 // Seanad N sits alongside Dáil (N + SEANAD_DAIL_OFFSET). The 27th Seanad
 // followed the 34th Dáil election, so the offset is 7.
-const SEANAD_DAIL_OFFSET = 7;
+export const SEANAD_DAIL_OFFSET = 7;
 export const LATEST_SEANAD = LATEST_DAIL - SEANAD_DAIL_OFFSET;
 
 // Seanad year = year of the Dáil election that triggered the Seanad election.
@@ -118,6 +118,16 @@ export function chamberName(chamber: Chamber): string {
 export function memberNoun(chamber: Chamber, plural = false): string {
   if (chamber === 'seanad') return plural ? 'Senators' : 'Senator';
   return plural ? 'TDs' : 'TD';
+}
+
+export function pairedHouse(chamber: Chamber, houseNo: number): { chamber: Chamber; houseNo: number } | null {
+  if (chamber === 'dail') {
+    const seanadNo = houseNo - SEANAD_DAIL_OFFSET;
+    return seanadNo >= 1 && seanadNo <= LATEST_SEANAD ? { chamber: 'seanad', houseNo: seanadNo } : null;
+  }
+
+  const dailNo = houseNo + SEANAD_DAIL_OFFSET;
+  return dailNo >= 1 && dailNo <= LATEST_DAIL ? { chamber: 'dail', houseNo: dailNo } : null;
 }
 
 export function houseLabel(chamber: Chamber, houseNo: number): string {

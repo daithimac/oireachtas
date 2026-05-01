@@ -217,6 +217,8 @@ function toMember(r: MemberResult, chamber?: Chamber, houseNo?: number): Member 
     fullName: m.fullName,
     firstName: m.firstName,
     lastName: m.lastName,
+    chamber: chamber ?? 'dail',
+    houseNo: houseNo ?? defaultHouseNo(chamber ?? 'dail'),
     party: extractParty(m.memberships),
     constituency: c.name,
     constituencyCode: c.code,
@@ -236,12 +238,13 @@ export async function fetchMembersByConstituency(
   houseNo?: number,
   signal?: AbortSignal
 ): Promise<Member[]> {
+  const resolvedHouseNo = houseNo ?? defaultHouseNo(chamber);
   const data = await apiFetch<OireachtasResult<MemberResult>>(
     '/members',
-    { const_code: constituencyCode, chamber, house_no: houseNo ?? defaultHouseNo(chamber), limit: 50 },
+    { const_code: constituencyCode, chamber, house_no: resolvedHouseNo, limit: 50 },
     signal
   );
-  return data.results.map(r => toMember(r));
+  return data.results.map(r => toMember(r, chamber, resolvedHouseNo));
 }
 
 export async function fetchAllMembers(
@@ -440,6 +443,28 @@ export async function fetchQuestions(memberUri: string, limit = 20, skip = 0, ch
     };
   });
   return { questions, total: data.head.counts.resultCount ?? questions.length };
+}
+
+export async function fetchAllQuestionsForMember(
+  memberUri: string,
+  chamber: Chamber,
+  houseNo: number,
+  signal?: AbortSignal,
+  dateStart?: string,
+  dateEnd?: string
+): Promise<{ questions: Question[]; total: number }> {
+  const pageSize = 500;
+  const firstPage = await fetchQuestions(memberUri, pageSize, 0, chamber, houseNo, signal, dateStart, dateEnd);
+  const questions = [...firstPage.questions];
+  const total = firstPage.total;
+
+  for (let skip = questions.length; skip < total; skip += pageSize) {
+    if (signal?.aborted) throw new DOMException('Aborted', 'AbortError');
+    const page = await fetchQuestions(memberUri, pageSize, skip, chamber, houseNo, signal, dateStart, dateEnd);
+    questions.push(...page.questions);
+  }
+
+  return { questions, total };
 }
 
 export async function fetchGlobalQuestions(

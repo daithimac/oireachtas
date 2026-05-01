@@ -135,6 +135,8 @@ export interface Member {
   fullName: string;
   firstName: string;
   lastName: string;
+  chamber: Chamber;
+  houseNo: number;
   party: string;
   constituency: string;
   constituencyCode: string;
