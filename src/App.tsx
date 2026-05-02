@@ -28,7 +28,6 @@ function latestForChamber(c: Chamber): number {
 const CABINET_PRIORITIES = [
   'Taoiseach',
   'Tánaiste',
-  'Minister',
   'Minister For Finance',
   'Minister For Public Expenditure, National Development Plan Delivery And Reform',
   'Minister For Public Expenditure, NDP Delivery And Reform',
@@ -45,6 +44,7 @@ const CABINET_PRIORITIES = [
   'Minister For Tourism, Culture, Arts, Gaeltacht, Sport And Media',
   'Minister For Transport',
   'Attorney General',
+  'Minister'
 ];
 
 function isCabinetOffice(office: OfficeHolding): boolean {
