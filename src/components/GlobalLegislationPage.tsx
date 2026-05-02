@@ -6,7 +6,7 @@ import { getHouseDateRange, getHousePresetYearRange, houseLabel } from '../utils
 import { formatDateShort } from '../utils/format';
 import { BillCard } from './BillCard';
 
-type LegislationTab = 'Government' | 'Private Member' | 'Passed';
+type LegislationTab = 'All' | 'Government' | 'Private Member' | 'Passed';
 
 const PAGE_SIZE = 5000;
 
@@ -32,12 +32,14 @@ function isPassedBill(bill: Bill): boolean {
 }
 
 function tabLabel(tab: LegislationTab): string {
+  if (tab === 'All') return 'All Legislation';
   if (tab === 'Private Member') return 'Private Members';
   if (tab === 'Passed') return 'Passed Legislation';
   return tab;
 }
 
 function billMatchesTab(bill: Bill, tab: LegislationTab): boolean {
+  if (tab === 'All') return true;
   if (tab === 'Passed') return isPassedBill(bill);
   return bill.source === tab;
 }
@@ -59,14 +61,14 @@ interface GlobalLegislationPageProps {
 export function GlobalLegislationPage({ chamber, houseNo, onBack, allMembers }: GlobalLegislationPageProps) {
   const houseRange = useMemo(() => getHouseDateRange(chamber, houseNo), [chamber, houseNo]);
   const presetYear = useMemo(() => getHousePresetYearRange(chamber, houseNo), [chamber, houseNo]);
-  const [activeTab, setActiveTab] = useState<LegislationTab>('Government');
+  const [activeTab, setActiveTab] = useState<LegislationTab>('All');
   const [dateStart, setDateStart] = useState(presetYear.start);
   const [dateEnd, setDateEnd] = useState(presetYear.end);
 
   useEffect(() => {
     setDateStart(presetYear.start);
     setDateEnd(presetYear.end);
-    setActiveTab('Government');
+    setActiveTab('All');
   }, [presetYear.start, presetYear.end]);
 
   const effectiveStart = clampDate(dateStart || houseRange.start, houseRange.start, houseRange.end);
@@ -82,18 +84,19 @@ export function GlobalLegislationPage({ chamber, houseNo, onBack, allMembers }: 
     fetchGlobalLegislation(limit, skip, chamber, houseNo, signal, orderedStart, orderedEnd, false),
   [chamber, houseNo, orderedStart, orderedEnd]);
 
-  const { items: bills, total, loading, error, loadingMore, sentinelRef } = usePaginatedList<Bill>(fetcher, 'bills', PAGE_SIZE);
+  const { items: bills, total, loading, error, loadingMore, handleLoadMore } = usePaginatedList<Bill>(fetcher, 'bills', PAGE_SIZE);
   const {
     items: passedSourceBills,
     total: passedTotal,
     loading: loadingPassed,
     error: passedError,
     loadingMore: loadingMorePassed,
-    sentinelRef: passedSentinelRef
+    handleLoadMore: handleLoadMorePassed
   } = usePaginatedList<Bill>(passedFetcher, 'bills', PAGE_SIZE);
 
   const tabCounts = useMemo(() => {
     const counts: Record<LegislationTab, number> = {
+      All: bills.length,
       Government: 0,
       'Private Member': 0,
       Passed: passedSourceBills.filter(isPassedBill).length
@@ -174,7 +177,7 @@ export function GlobalLegislationPage({ chamber, houseNo, onBack, allMembers }: 
       </div>
 
       <div className="type-filters" role="tablist" aria-label="Filter legislation by source">
-        {(['Government', 'Private Member', 'Passed'] as LegislationTab[]).map((nextTab) => (
+        {(['All', 'Government', 'Private Member', 'Passed'] as LegislationTab[]).map((nextTab) => (
           <button
             key={nextTab}
             type="button"
@@ -219,16 +222,15 @@ export function GlobalLegislationPage({ chamber, houseNo, onBack, allMembers }: 
       )}
 
       {(activeTab === 'Passed' ? passedSourceBills.length < passedTotal : bills.length < total) && (
-        <div
-          ref={activeTab === 'Passed' ? passedSentinelRef : sentinelRef}
-          className="legislation-auto-load"
-          role="status"
-          aria-live="polite"
+        <button
+          className="load-more-btn"
+          onClick={() => { void (activeTab === 'Passed' ? handleLoadMorePassed() : handleLoadMore()); }}
+          disabled={activeTab === 'Passed' ? loadingMorePassed : loadingMore}
         >
           {(activeTab === 'Passed' ? loadingMorePassed : loadingMore)
-            ? 'Loading more legislation…'
-            : 'Scroll for more legislation'}
-        </div>
+            ? 'Loading…'
+            : `Load more (${(activeTab === 'Passed' ? passedTotal - passedSourceBills.length : total - bills.length)} remaining)`}
+        </button>
       )}
     </div>
   );

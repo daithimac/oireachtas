@@ -765,10 +765,6 @@ body {
   color: var(--text3); cursor: pointer; transition: var(--t);
 }
 .legislation-presets button:hover { border-color: var(--g400); color: var(--g700); background: var(--g50); }
-.legislation-auto-load {
-  min-height: 48px; display: flex; align-items: center; justify-content: center;
-  color: var(--text4); font-size: 13px; font-weight: 700;
-}
 .committee-picker { position: relative; display: flex; flex-direction: column; gap: 6px; }
 .committee-picker__input-wrap { position: relative; }
 .committee-picker__input { width: 100%; padding-right: 64px; }
