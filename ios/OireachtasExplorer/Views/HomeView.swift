@@ -2,10 +2,11 @@ import SwiftUI
 
 @MainActor
 final class HomeViewModel: ObservableObject {
-    @Published var recentDebates: [Debate] = []
     @Published var memberCount: Int = 0
     @Published var constituencyCount: Int = 0
     @Published var debateCount: Int = 0
+    @Published var chairMembers: [Member] = []
+    @Published var cabinetMembers: [Member] = []
     @Published var isLoading = false
     @Published var error: String?
 
@@ -14,18 +15,35 @@ final class HomeViewModel: ObservableObject {
         error = nil
         do {
             let chamberId = houseUri(chamber: chamber, houseNo: houseNo)
-            async let debatesResult = OireachtasAPI.shared.getDebates(chamberId: chamberId, limit: 5)
+            async let debatesResult = OireachtasAPI.shared.getDebates(chamberId: chamberId, limit: 1)
             async let membersResult = OireachtasAPI.shared.getMembers(chamber: chamber, houseNo: houseNo)
             async let constituenciesResult = OireachtasAPI.shared.getConstituencies(chamber: chamber, houseNo: houseNo)
 
-            let (debates, total) = try await debatesResult
+            let (_, total) = try await debatesResult
             let members = try await membersResult
             let constituencies = try await constituenciesResult
 
-            recentDebates = debates
             debateCount = total
             memberCount = members.count
             constituencyCount = constituencies.count
+
+            chairMembers = members.filter { member in
+                member.offices.contains { office in
+                    let lower = office.lowercased()
+                    return lower.contains("ceann comhairle") || lower.contains("cathaoirleach")
+                }
+            }.sorted { $0.fullName < $1.fullName }
+
+            if chamber == .dail {
+                cabinetMembers = members.filter { member in
+                    member.offices.contains { office in
+                        let lower = office.lowercased()
+                        return lower == "taoiseach" || lower == "tánaiste" || lower.starts(with: "minister") || lower == "attorney general"
+                    }
+                }.sorted { $0.fullName < $1.fullName }
+            } else {
+                cabinetMembers = []
+            }
         } catch {
             self.error = error.localizedDescription
         }
@@ -47,7 +65,8 @@ struct HomeView: View {
                     .padding(.horizontal, 16)
                     .padding(.top, 12)
                 statsSection
-                recentDebatesSection
+                chairsSection
+                cabinetSection
                 attributionSection
             }
         }
@@ -142,47 +161,77 @@ struct HomeView: View {
         )
     }
 
-    // MARK: - Recent Debates
 
-    private var recentDebatesSection: some View {
-        VStack(alignment: .leading, spacing: 14) {
-            Text("Recent Debates")
-                .font(.dmSerif(size: 20))
-                .foregroundColor(Color.headingText)
+    // MARK: - Chairs & Cabinet
 
-            if vm.isLoading {
-                LoadingView()
-            } else if let err = vm.error {
-                ErrorBanner(message: err)
-            } else {
-                ForEach(vm.recentDebates) { debate in
-                    if let xmlUri = debate.rawXmlUri, let sectionUri = debate.debateSectionUri {
-                        Button {
-                            navigate(.debateViewer(
-                                xmlUri: xmlUri,
-                                debateSectionUri: sectionUri,
-                                title: debate.title,
-                                focusMemberUri: nil
-                            ))
-                        } label: {
-                            DebateItemRow(
-                                title: debate.title,
-                                date: debate.formattedDate,
-                                typeLabel: friendlyType(debate.debateType)
-                            )
+    @ViewBuilder
+    private var chairsSection: some View {
+        if !vm.chairMembers.isEmpty {
+            VStack(alignment: .leading, spacing: 14) {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Chairs")
+                        .font(.dmSerif(size: 20))
+                        .foregroundColor(Color.headingText)
+                    Text(session.chamber == .dail ? "Ceann Comhairle & Leas-Cheann Comhairle" : "Cathaoirleach & Leas-Chathaoirleach")
+                        .font(.inter(size: 13))
+                        .foregroundColor(Color.secondaryText)
+                }
+                
+                LazyVGrid(columns: [GridItem(.flexible(), spacing: 10), GridItem(.flexible(), spacing: 10)], spacing: 10) {
+                    ForEach(vm.chairMembers) { member in
+                        NavigationLink(destination: MemberProfileLoaderView(memberUri: member.uri)) {
+                            MemberCardView(member: member)
                         }
                         .buttonStyle(.plain)
-                    } else {
-                        DebateItemRow(
-                            title: debate.title,
-                            date: debate.formattedDate,
-                            typeLabel: friendlyType(debate.debateType)
-                        )
                     }
                 }
             }
+            .padding(16)
         }
-        .padding(16)
+    }
+
+    @State private var isCabinetExpanded = false
+
+    @ViewBuilder
+    private var cabinetSection: some View {
+        if session.chamber == .dail && !vm.cabinetMembers.isEmpty {
+            VStack(alignment: .leading, spacing: 14) {
+                HStack {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Cabinet")
+                            .font(.dmSerif(size: 20))
+                            .foregroundColor(Color.headingText)
+                        Text("Government appointments")
+                            .font(.inter(size: 13))
+                            .foregroundColor(Color.secondaryText)
+                    }
+                    Spacer()
+                    Button {
+                        withAnimation { isCabinetExpanded.toggle() }
+                    } label: {
+                        Text(isCabinetExpanded ? "Hide" : "Show (\(vm.cabinetMembers.count))")
+                            .font(.inter(size: 13, weight: .semibold))
+                            .foregroundColor(Color.darkGreen)
+                            .padding(.horizontal, 12)
+                            .padding(.vertical, 6)
+                            .background(Color.darkGreen.opacity(0.1))
+                            .clipShape(Capsule())
+                    }
+                }
+                
+                if isCabinetExpanded {
+                    LazyVGrid(columns: [GridItem(.flexible(), spacing: 10), GridItem(.flexible(), spacing: 10)], spacing: 10) {
+                        ForEach(vm.cabinetMembers) { member in
+                            NavigationLink(destination: MemberProfileLoaderView(memberUri: member.uri)) {
+                                MemberCardView(member: member)
+                            }
+                            .buttonStyle(.plain)
+                        }
+                    }
+                }
+            }
+            .padding(16)
+        }
     }
 
     // MARK: - Attribution

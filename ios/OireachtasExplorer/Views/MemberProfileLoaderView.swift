@@ -63,9 +63,15 @@ struct MemberProfileLoaderView: View {
             }
             .buttonStyle(.plain)
             
-            Text("Loading Profile...")
-                .font(.dmSerif(size: 18))
-                .foregroundColor(.white)
+            if let m = member {
+                Text(m.fullName)
+                    .font(.dmSerif(size: 18))
+                    .foregroundColor(.white)
+            } else {
+                Text("Loading Profile...")
+                    .font(.dmSerif(size: 18))
+                    .foregroundColor(.white)
+            }
             
             Spacer()
         }
