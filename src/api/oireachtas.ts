@@ -382,7 +382,8 @@ export async function fetchAllMembers(
     { chamber, house_no: resolvedHouseNo, limit: 500 },
     signal
   );
-  return data.results.map(r => toMember(r, chamber, resolvedHouseNo));
+  const houseRange = await fetchHouseDateRange(chamber, resolvedHouseNo, signal);
+  return data.results.map(r => toMember(r, chamber, resolvedHouseNo, houseRange));
 }
 
 export async function fetchMember(memberUri: string, chamber: Chamber, houseNo: number, signal?: AbortSignal): Promise<Member | null> {
