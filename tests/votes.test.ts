@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import type { DebateResult, VoteResult } from '../src/types.ts';
-import { extractVoteDebateContext, mapVoteResults, parseTellers, splitVoteMembers } from '../src/utils/votes.ts';
+import { extractVoteDebateContext, mapVoteResults, matchesVoteHouse, parseTellers, splitVoteMembers } from '../src/utils/votes.ts';
 
 function voteResult(overrides: Partial<VoteResult['division']>): VoteResult {
   return {
@@ -44,6 +44,12 @@ test('maps and deduplicates vote list rows by vote uri', () => {
   assert.equal(rows[0].category, 'Motion');
   assert.equal(rows[0].tallyFor, 88);
   assert.equal(rows[0].tallyAgainst, 62);
+});
+
+test('matches only the selected chamber and house number', () => {
+  assert.equal(matchesVoteHouse(voteResult({}), 'dail', 34), true);
+  assert.equal(matchesVoteHouse(voteResult({ house: { uri: '', houseNo: '33', houseCode: 'dail', showAs: '33rd Dáil' } }), 'dail', 34), false);
+  assert.equal(matchesVoteHouse(voteResult({ house: { uri: '', houseNo: '27', houseCode: 'seanad', showAs: '27th Seanad' } }), 'dail', 34), false);
 });
 
 test('splits vote detail member tallies into Tá, Níl, and Staon buckets', () => {

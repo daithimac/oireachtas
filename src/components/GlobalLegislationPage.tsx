@@ -54,11 +54,10 @@ function byLatestDateDesc(a: Bill, b: Bill): number {
 interface GlobalLegislationPageProps {
   chamber: Chamber;
   houseNo: number;
-  onBack: () => void;
   allMembers: Member[];
 }
 
-export function GlobalLegislationPage({ chamber, houseNo, onBack, allMembers }: GlobalLegislationPageProps) {
+export function GlobalLegislationPage({ chamber, houseNo, allMembers }: GlobalLegislationPageProps) {
   const houseRange = useMemo(() => getHouseDateRange(chamber, houseNo), [chamber, houseNo]);
   const presetYear = useMemo(() => getHousePresetYearRange(chamber, houseNo), [chamber, houseNo]);
   const [activeTab, setActiveTab] = useState<LegislationTab>('All');
@@ -127,7 +126,6 @@ export function GlobalLegislationPage({ chamber, houseNo, onBack, allMembers }: 
 
   return (
     <div className="container legislation-page">
-      <button className="back-btn" onClick={onBack}>← Back</button>
       <div className="legislation-page__header">
         <div>
           <h1 className="section-heading section-heading--tight">{houseLabel(chamber, houseNo)} Legislation</h1>

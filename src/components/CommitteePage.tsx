@@ -14,7 +14,6 @@ interface CommitteePageProps {
   allMembers: Member[];
   loadingAllMembers: boolean;
   onSelectMember: (memberUri: string, memberName: string, constituencyCode: string, constituencyName: string, targetChamber?: Chamber, targetHouseNo?: number) => void;
-  onBack: () => void;
 }
 
 const ROLE_ORDER: Record<string, number> = {
@@ -43,7 +42,6 @@ export function CommitteePage({
   allMembers,
   loadingAllMembers,
   onSelectMember,
-  onBack,
 }: CommitteePageProps) {
   const paired = useMemo(() => pairedHouse(chamber, houseNo ?? 0), [chamber, houseNo]);
   const pairedFetcher = useCallback((signal: AbortSignal) => {
@@ -89,8 +87,6 @@ export function CommitteePage({
 
   return (
     <div className="container">
-      <button className="back-btn" onClick={onBack} aria-label="Go back">← Back</button>
-
       <div className="member-grid-page__header">
         <h2 className="section-heading">{committeeName}</h2>
         {!loadingMembers && (

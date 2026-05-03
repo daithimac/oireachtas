@@ -6,7 +6,6 @@ import { formatDateShort } from '../utils/format';
 
 interface PublicCollectionPageProps {
   slug: string;
-  onBack: () => void;
 }
 
 function markdownEscape(text: string): string {
@@ -50,7 +49,7 @@ function buildPublicDossier(collection: PublicResearchCollection): string {
   return lines.join('\n');
 }
 
-export function PublicCollectionPage({ slug, onBack }: PublicCollectionPageProps) {
+export function PublicCollectionPage({ slug }: PublicCollectionPageProps) {
   const [collection, setCollection] = useState<PublicResearchCollection | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -118,7 +117,6 @@ export function PublicCollectionPage({ slug, onBack }: PublicCollectionPageProps
 
   return (
     <div className="container">
-      <button className="back-btn" onClick={onBack}>← Back</button>
       <div className="member-grid-page__header">
         <h1 className="section-heading">Public Research Collection</h1>
         <p className="section-subheading">A shareable dossier of curated Oireachtas records for newsroom and research workflows.</p>

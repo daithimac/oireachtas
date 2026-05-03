@@ -19,7 +19,6 @@ interface MemberProfileProps {
   constituencyName: string;
   chamber: Chamber;
   houseNo: number;
-  onBack: () => void;
   onNavigate: (view: View) => void;
 }
 
@@ -83,7 +82,7 @@ const TAB_CONFIG: { key: ProfileTab; label: string; Icon: typeof BarChart3 }[] =
   { key: 'legislation', label: 'Legislation', Icon: ScrollText },
 ];
 
-export function MemberProfile({ memberUri, constituencyName, chamber, houseNo, onBack, onNavigate }: MemberProfileProps) {
+export function MemberProfile({ memberUri, constituencyName, chamber, houseNo, onNavigate }: MemberProfileProps) {
   const [activeTab, setActiveTab] = useState<ProfileTab>('overview');
   const [photoFailed, setPhotoFailed] = useState(false);
   const tabRefs = useRef<Record<ProfileTab, HTMLButtonElement | null>>({
@@ -126,7 +125,6 @@ export function MemberProfile({ memberUri, constituencyName, chamber, houseNo, o
   if (error || !member) {
     return (
       <div className="container">
-        <button className="back-btn" onClick={onBack} aria-label="Back to previous page">← Back</button>
         <div className="error-banner" role="alert">{error ?? 'Member not found.'}</div>
       </div>
     );
@@ -138,10 +136,6 @@ export function MemberProfile({ memberUri, constituencyName, chamber, houseNo, o
   return (
     <div className="page">
       <div className="profile-page">
-        <button className="back-btn" onClick={onBack} aria-label="Back to previous page">
-          ← Back
-        </button>
-
         <div className="profile-layout">
           {/* Sticky sidebar */}
           <aside className="profile-sidebar">

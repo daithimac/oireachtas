@@ -12,7 +12,6 @@ interface MemberGridProps {
   allMembers: Member[];
   loadingAllMembers: boolean;
   onSelectMember: (memberId: string, memberName: string, constituencyCode: string, constituencyName: string) => void;
-  onBack: () => void;
 }
 
 export function MemberGrid({
@@ -23,7 +22,6 @@ export function MemberGrid({
   allMembers,
   loadingAllMembers,
   onSelectMember,
-  onBack,
 }: MemberGridProps) {
   const nounSingular = memberNoun(chamber);
   const nounPlural = memberNoun(chamber, true);
@@ -34,8 +32,6 @@ export function MemberGrid({
 
   return (
     <div className="container">
-      <button className="back-btn" onClick={onBack} aria-label="Back to all constituencies">← All constituencies</button>
-
       <div className="member-grid-page__header">
         <h2 className="section-heading">{constituencyName}</h2>
         <p className="section-subheading">

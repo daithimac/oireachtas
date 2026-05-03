@@ -14,7 +14,6 @@ interface VoteDetailPageProps {
   chamber: Chamber;
   houseNo: number;
   allMembers: Member[];
-  onBack: () => void;
   onSelectMember: (memberUri: string, memberName: string, constituencyCode: string, constituencyName: string) => void;
   onNavigate: (view: View) => void;
 }
@@ -212,7 +211,7 @@ function VoteColumn({
   );
 }
 
-export function VoteDetailPage({ voteUri, title, chamber, houseNo, allMembers, onBack, onSelectMember, onNavigate }: VoteDetailPageProps) {
+export function VoteDetailPage({ voteUri, title, chamber, houseNo, allMembers, onSelectMember, onNavigate }: VoteDetailPageProps) {
   const [shareOpen, setShareOpen] = useState(false);
   const fetcher = useCallback((signal: AbortSignal) =>
     fetchVoteDetail(voteUri, allMembers, signal),
@@ -245,7 +244,6 @@ export function VoteDetailPage({ voteUri, title, chamber, houseNo, allMembers, o
   return (
     <div className="container vote-detail-page">
       {shareOpen && <ShareModal url={shareUrl} onClose={() => { setShareOpen(false); }} />}
-      <button className="back-btn" onClick={onBack}>← Back</button>
 
       <div className="vote-detail-hero">
         <div>

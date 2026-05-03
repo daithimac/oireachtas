@@ -13,7 +13,6 @@ interface GlobalSearchPageProps {
   allMembers: Member[];
   loadingAllMembers: boolean;
   onNavigate: (view: View) => void;
-  onBack: () => void;
 }
 
 type ResultType = 'all' | 'members' | 'debates' | 'bills' | 'questions';
@@ -29,7 +28,6 @@ export function GlobalSearchPage({
   allMembers,
   loadingAllMembers,
   onNavigate,
-  onBack,
 }: GlobalSearchPageProps) {
   const [query, setQuery] = useState(initialQuery ?? '');
   const [submitted, setSubmitted] = useState(initialQuery ?? '');
@@ -118,7 +116,6 @@ export function GlobalSearchPage({
 
   return (
     <div className="container">
-      <button className="back-btn" onClick={onBack}>← Back</button>
       <div className="member-grid-page__header">
         <h1 className="section-heading">Global Search</h1>
         <p className="section-subheading">Search loaded members, recent debates, legislation, and parliamentary questions for this session.</p>

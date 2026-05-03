@@ -12,7 +12,6 @@ import { ShareModal } from './ShareModal';
 interface GlobalVotesPageProps {
   chamber: Chamber;
   houseNo: number;
-  onBack: () => void;
   onNavigate: (view: View) => void;
 }
 
@@ -37,7 +36,7 @@ function voteMatchesSearch(vote: ChamberVote, query: string): boolean {
   return haystack.includes(query);
 }
 
-export function GlobalVotesPage({ chamber, houseNo, onBack, onNavigate }: GlobalVotesPageProps) {
+export function GlobalVotesPage({ chamber, houseNo, onNavigate }: GlobalVotesPageProps) {
   const range = useMemo(() => getHouseDateRange(chamber, houseNo), [chamber, houseNo]);
   const [dateStart, setDateStart] = useState(range.start);
   const [dateEnd, setDateEnd] = useState(range.end);
@@ -67,7 +66,6 @@ export function GlobalVotesPage({ chamber, houseNo, onBack, onNavigate }: Global
   return (
     <div className="container votes-page">
       {shareUrl && <ShareModal url={shareUrl} onClose={() => { setShareUrl(null); }} />}
-      <button className="back-btn" onClick={onBack}>← Back</button>
 
       <div className="votes-page__header">
         <div>

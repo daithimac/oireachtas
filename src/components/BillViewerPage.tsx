@@ -13,11 +13,10 @@ interface BillViewerPageProps {
   billYear: string;
   chamber: Chamber;
   houseNo: number;
-  onBack: () => void;
   allMembers: Member[];
 }
 
-export function BillViewerPage({ billNo, billYear, chamber, houseNo, onBack, allMembers }: BillViewerPageProps) {
+export function BillViewerPage({ billNo, billYear, chamber, houseNo, allMembers }: BillViewerPageProps) {
   const fetcher = useCallback((signal: AbortSignal) => fetchBill(billNo, billYear, signal), [billNo, billYear]);
   const { data: bill, loading, error } = useAsync(fetcher);
   const [activeDocKey, setActiveDocKey] = useState('');
@@ -25,9 +24,6 @@ export function BillViewerPage({ billNo, billYear, chamber, houseNo, onBack, all
   if (loading) {
     return (
       <div className="container">
-        <button className="back-button" onClick={onBack} style={{ marginBottom: '1.5rem', background: 'transparent', border: 'none', color: 'var(--color-accent)', cursor: 'pointer', padding: 0, fontSize: '1rem', fontWeight: 600 }}>
-          ← Back
-        </button>
         <div className="loading-state" role="status">
           <div className="spinner" aria-hidden="true" />
           <span>Loading legislation record…</span>
@@ -39,9 +35,6 @@ export function BillViewerPage({ billNo, billYear, chamber, houseNo, onBack, all
   if (error || !bill) {
     return (
       <div className="container">
-        <button className="back-button" onClick={onBack} style={{ marginBottom: '1.5rem', background: 'transparent', border: 'none', color: 'var(--color-accent)', cursor: 'pointer', padding: 0, fontSize: '1rem', fontWeight: 600 }}>
-          ← Back
-        </button>
         <div className="error-banner">Failed to load bill: {error ?? 'Not found'}</div>
       </div>
     );
@@ -56,10 +49,6 @@ export function BillViewerPage({ billNo, billYear, chamber, houseNo, onBack, all
 
   return (
     <div className="container" style={{ maxWidth: '1200px', animation: 'fadeInUp 0.3s ease' }}>
-      <button className="back-button" onClick={onBack} style={{ marginBottom: '1.5rem', background: 'transparent', border: 'none', color: 'var(--color-accent)', cursor: 'pointer', padding: 0, fontSize: '1rem', fontWeight: 600 }}>
-        ← Back
-      </button>
-
       <div style={{ padding: '2rem', background: 'var(--color-surface)', borderRadius: 'var(--radius-xl)', boxShadow: 'var(--shadow-md)', marginBottom: '2rem', border: '1px solid var(--color-border)' }}>
         <div style={{ display: 'flex', gap: '1rem', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: '1rem' }}>
           <div>

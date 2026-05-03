@@ -8,7 +8,6 @@ import type {
   Member,
   OfficeHolding,
   Debate,
-  DivisionResult,
   Division,
   QuestionResult,
   Question,
@@ -25,7 +24,7 @@ import type {
 } from '../types';
 import { getHouseDateRange, LATEST_DAIL, LATEST_SEANAD } from '../utils/dail';
 import { VOTE_HISTORY_CHUNK_LIMIT } from '../constants';
-import { extractVoteDebateContext, mapVoteResults, splitVoteMembers } from '../utils/votes';
+import { extractVoteDebateContext, mapVoteResults, matchesVoteHouse, splitVoteMembers } from '../utils/votes';
 
 export type ChamberType = 'house' | 'committee' | '';
 
@@ -105,6 +104,41 @@ function apiFetch<T>(path: string, params: Record<string, string | number> = {},
 
   responseCache.set(key, promise);
   return withAbortSignal(promise, signal);
+}
+
+async function fetchScopedVotePage(
+  path: '/divisions' | '/votes',
+  baseParams: Record<string, string | number>,
+  chamber: Chamber,
+  houseNo: number,
+  limit: number,
+  skip: number,
+  signal?: AbortSignal
+): Promise<{ results: VoteResult[]; total: number }> {
+  const pageSize = Math.max(limit, 100);
+  const filtered: VoteResult[] = [];
+  let rawSkip = 0;
+  let rawTotal = Infinity;
+
+  while (rawSkip < rawTotal) {
+    if (signal?.aborted) throw abortError();
+
+    const data = await apiFetch<OireachtasResult<VoteResult>>(
+      path,
+      { ...baseParams, limit: pageSize, skip: rawSkip },
+      signal
+    );
+
+    rawTotal = data.head.counts.resultCount ?? data.results.length;
+    filtered.push(...data.results.filter((result) => matchesVoteHouse(result, chamber, houseNo)));
+
+    rawSkip += pageSize;
+  }
+
+  return {
+    results: filtered.slice(skip, skip + limit),
+    total: filtered.length,
+  };
 }
 
 export function clearApiCache(): void {
@@ -525,11 +559,15 @@ function parseTallyType(showAs: string): 'ta' | 'nil' | 'staon' {
 }
 
 export async function fetchDivisions(memberUri: string, limit = 50, skip = 0, chamber: Chamber, houseNo: number, signal?: AbortSignal, dateStart?: string, dateEnd?: string): Promise<{ divisions: Division[]; total: number }> {
-  const params: Record<string, string | number> = { member_id: memberUri, limit, skip, chamber_id: houseUri(chamber, houseNo) };
+  const params: Record<string, string | number> = { member_id: memberUri, chamber_id: houseUri(chamber, houseNo) };
   applyDateParams(params, dateStart, dateEnd);
-  const data = await apiFetch<OireachtasResult<DivisionResult>>(
+  const data = await fetchScopedVotePage(
     '/divisions',
     params,
+    chamber,
+    houseNo,
+    limit,
+    skip,
     signal
   );
   const divisions = data.results.map((r) => {
@@ -550,7 +588,7 @@ export async function fetchDivisions(memberUri: string, limit = 50, skip = 0, ch
       debateSectionUri: d.debate?.debateSection,
     };
   });
-  return { divisions, total: data.head.counts.resultCount ?? divisions.length };
+  return { divisions, total: data.total };
 }
 
 // ── Chamber votes ─────────────────────────────────────────────────────────────
@@ -571,19 +609,21 @@ export async function fetchChamberVotes(
     chamber_type: chamberType,
     date_start: dateStart ?? range.start,
     date_end: dateEnd ?? range.end,
-    limit,
-    skip,
   };
   if (chamberType === 'house') params.chamber = chamber;
   if (outcome) params.outcome = outcome;
 
-  const data = await apiFetch<OireachtasResult<VoteResult>>(
+  const data = await fetchScopedVotePage(
     '/votes',
     params,
+    chamber,
+    houseNo,
+    limit,
+    skip,
     signal
   );
   const votes = mapVoteResults(data.results);
-  return { votes, total: data.head.counts.resultCount ?? votes.length };
+  return { votes, total: data.total };
 }
 
 export async function fetchVoteDetail(

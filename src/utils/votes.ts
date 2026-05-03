@@ -1,9 +1,13 @@
-import type { ChamberVote, DebateResult, Member, VoteDebateContext, VoteMemberSplit, VoteRelatedBill, VoteResult } from '../types';
+import type { Chamber, ChamberVote, DebateResult, Member, VoteDebateContext, VoteMemberSplit, VoteRelatedBill, VoteResult } from '../types';
 
 interface VoteMemberRef {
   memberCode: string;
   showAs: string;
   uri: string;
+}
+
+export function matchesVoteHouse(result: VoteResult, chamber: Chamber, houseNo: number): boolean {
+  return result.division.house.houseCode === chamber && result.division.house.houseNo === String(houseNo);
 }
 
 export function parseVoteTally(showAs: string | undefined): 'ta' | 'nil' | 'staon' {

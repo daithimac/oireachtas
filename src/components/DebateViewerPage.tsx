@@ -18,7 +18,6 @@ interface DebateViewerPageProps {
   speechIdx?: number;
   chamber: Chamber;
   houseNo: number;
-  onBack: () => void;
   onNavigateMember?: (view: View) => void;
 }
 
@@ -37,7 +36,7 @@ function paragraphsToQuote(paragraphs: string[]): string {
   return paragraphs.map(htmlToText).filter(Boolean).join('\n\n');
 }
 
-export function DebateViewerPage({ xmlUri, debateSectionUri, title, focusMemberUri, speechIdx, chamber, houseNo, onBack }: DebateViewerPageProps) {
+export function DebateViewerPage({ xmlUri, debateSectionUri, title, focusMemberUri, speechIdx, chamber, houseNo }: DebateViewerPageProps) {
   const [shareUrl, setShareUrl] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [speakerFilter, setSpeakerFilter] = useState('');
@@ -112,12 +111,6 @@ export function DebateViewerPage({ xmlUri, debateSectionUri, title, focusMemberU
   return (
     <div style={{ maxWidth: '800px', margin: '0 auto', padding: '2rem 1rem' }}>
       {shareUrl && <ShareModal url={shareUrl} onClose={() => { setShareUrl(null); }} />}
-      <button
-        onClick={onBack}
-        style={{ marginBottom: '2rem', padding: '8px 16px', background: 'var(--color-bg-secondary)', border: '1px solid var(--color-border)', borderRadius: '4px', cursor: 'pointer' }}
-      >
-        ← Back
-      </button>
 
       <div className="record-title-row">
         <h1 style={{ fontSize: '2rem', marginBottom: '1rem', color: 'var(--color-text-primary)', overflowWrap: 'break-word', wordBreak: 'break-word' }}>{title}</h1>

@@ -196,26 +196,29 @@ body {
   font-family: var(--fi); font-size: 12px; font-weight: 700; cursor: pointer; transition: var(--t);
 }
 .app-header__nav button:hover { background: rgba(255,255,255,.16); color: #fff; }
-.app-header__share {
-  padding: 7px 12px;
-  border: 1px solid rgba(255,255,255,.16);
-  border-radius: var(--r-pill);
-  background: rgba(255,255,255,.14);
-  color: #fff;
-  font-family: var(--fi);
-  font-size: 12px;
-  font-weight: 700;
-  cursor: pointer;
-  transition: var(--t);
-  flex-shrink: 0;
-}
-.app-header__share:hover { background: rgba(255,255,255,.24); }
-
 /* ── Page scaffold ── */
 .page { flex: 1; animation: fadeUp .3s ease; }
 .container {
   max-width: 1100px; margin: 0 auto; padding: 40px 24px; width: 100%;
   animation: fadeUp .35s ease;
+}
+
+.page-action-bar {
+  border-bottom: 1px solid var(--border);
+  background: rgba(255,255,255,.88);
+  backdrop-filter: blur(8px);
+  position: sticky;
+  top: 62px;
+  z-index: 180;
+}
+.page-action-bar__inner {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 12px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
 }
 
 /* ── Back btn ── */
@@ -228,6 +231,31 @@ body {
 .back-btn:hover {
   background: var(--g50); border-color: var(--g400); color: var(--g700);
   transform: translateX(-2px);
+}
+.back-btn--page-action {
+  margin-bottom: 0;
+}
+.page-share-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--g700);
+  border: 1px solid var(--g700);
+  border-radius: var(--r-pill);
+  padding: 9px 18px;
+  font-family: var(--fi);
+  font-size: 14px;
+  font-weight: 700;
+  color: #fff;
+  cursor: pointer;
+  transition: var(--t);
+  box-shadow: var(--sh-sm);
+}
+.page-share-btn:hover {
+  background: var(--g900);
+  border-color: var(--g900);
+  box-shadow: var(--sh-md);
+  transform: translateY(-1px);
 }
 
 /* ── Spinner ── */
@@ -1864,10 +1892,15 @@ body {
   .app-header__search { order: 3; width: 100%; max-width: none; margin: 0; }
   .app-header__nav { order: 4; width: 100%; }
   .app-header__nav button { flex: 1; }
-  .app-header__share { order: 2; margin-left: auto; }
   .app-header__subtitle-container {
     width: 100%;
     justify-content: space-between;
+  }
+  .page-action-bar {
+    top: 124px;
+  }
+  .page-action-bar__inner {
+    padding: 10px 16px;
   }
   .app-header__title { font-size: 16px; }
   .hero h1 { font-size: 30px; }

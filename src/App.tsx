@@ -604,7 +604,6 @@ export default function App() {
             allMembers={allMembers}
             loadingAllMembers={loadingMembers}
             onSelectMember={handleSelectMember}
-            onBack={handleBack}
           />
         );
 
@@ -615,7 +614,6 @@ export default function App() {
             constituencyName={view.constituencyName}
             chamber={chamber}
             houseNo={houseNo}
-            onBack={handleBack}
             onNavigate={navigate}
           />
         );
@@ -630,14 +628,12 @@ export default function App() {
             allMembers={allMembers}
             loadingAllMembers={loadingMembers}
             onSelectMember={handleSelectMember}
-            onBack={handleBack}
           />
         );
 
       case 'global-debates':
         return (
           <div className="container">
-            <button className="back-btn" onClick={handleBack}>← Back</button>
             <h1 className="section-heading section-heading--tight">All {label} Debates</h1>
             <p className="section-subheading section-subheading--spaced">Chronological official records of legislative proceedings.</p>
             <GlobalDebatesList
@@ -654,7 +650,6 @@ export default function App() {
             chamber={chamber}
             houseNo={houseNo}
             onNavigate={navigate}
-            onBack={handleBack}
           />
         );
 
@@ -663,7 +658,6 @@ export default function App() {
           <GlobalLegislationPage
             chamber={chamber}
             houseNo={houseNo}
-            onBack={handleBack}
             allMembers={allMembers}
           />
         );
@@ -677,15 +671,14 @@ export default function App() {
             allMembers={allMembers}
             loadingAllMembers={loadingMembers}
             onNavigate={navigate}
-            onBack={handleBack}
           />
         );
 
       case 'saved':
-        return <SavedItemsPage onBack={handleBack} />;
+        return <SavedItemsPage />;
 
       case 'collection':
-        return <PublicCollectionPage slug={view.slug} onBack={handleBack} />;
+        return <PublicCollectionPage slug={view.slug} />;
 
       case 'compare':
         return (
@@ -695,7 +688,6 @@ export default function App() {
             allMembers={allMembers}
             loadingAllMembers={loadingMembers}
             onNavigate={navigate}
-            onBack={handleBack}
           />
         );
 
@@ -703,7 +695,6 @@ export default function App() {
         return (
           <div className="container">
             <div className="members-header">
-              <button className="back-btn" style={{ marginBottom: 0 }} onClick={handleBack}>← Back</button>
               <h1 style={{ fontFamily: 'var(--ff)', fontSize: 28, color: 'var(--text)' }}>{view.partyName} {memberNoun(chamber, true)}</h1>
             </div>
             <div className="member-grid" style={{ padding: 0, marginTop: 24 }}>
@@ -732,7 +723,6 @@ export default function App() {
             speechIdx={view.speechIdx}
             chamber={chamber}
             houseNo={houseNo}
-            onBack={handleBack}
           />
         );
 
@@ -744,7 +734,6 @@ export default function App() {
             chamber={chamber}
             houseNo={houseNo}
             allMembers={allMembers}
-            onBack={handleBack}
             onSelectMember={handleSelectMember}
             onNavigate={navigate}
           />
@@ -757,7 +746,6 @@ export default function App() {
             billYear={view.billYear}
             chamber={chamber}
             houseNo={houseNo}
-            onBack={handleBack}
             allMembers={allMembers}
           />
         );
@@ -782,17 +770,6 @@ export default function App() {
           <button type="button" onClick={() => { navigate({ kind: 'saved' }); }}>Saved</button>
         </nav>
 
-        {globalShareUrl && (
-          <button
-            type="button"
-            className="app-header__share"
-            onClick={() => { setGlobalShareOpen(true); }}
-            aria-label="Share this page"
-          >
-            Share
-          </button>
-        )}
-
         <div className="app-header__subtitle-container">
           <div className="chamber-toggle" role="group" aria-label="Select chamber">
             {(['dail', 'seanad'] as Chamber[]).map((c) => (
@@ -815,6 +792,21 @@ export default function App() {
           </select>
         </div>
       </header>
+      {globalShareUrl && (
+        <div className="page-action-bar">
+          <div className="page-action-bar__inner">
+            <button className="back-btn back-btn--page-action" onClick={handleBack}>← Back</button>
+            <button
+              type="button"
+              className="page-share-btn"
+              onClick={() => { setGlobalShareOpen(true); }}
+              aria-label="Share this page"
+            >
+              Share
+            </button>
+          </div>
+        </div>
+      )}
       {globalShareOpen && globalShareUrl && (
         <ShareModal url={globalShareUrl} onClose={() => { setGlobalShareOpen(false); }} />
       )}

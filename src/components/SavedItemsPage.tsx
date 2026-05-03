@@ -7,10 +7,6 @@ import { formatDateShort } from '../utils/format';
 import { viewToHash } from '../utils/routing';
 import type { SavedItem } from '../utils/savedItems';
 
-interface SavedItemsPageProps {
-  onBack: () => void;
-}
-
 function typeLabel(type: string): string {
   if (type === 'speech') return 'Transcript passage';
   return type.charAt(0).toUpperCase() + type.slice(1);
@@ -52,7 +48,7 @@ function buildResearchDossier(items: SavedItem[]): string {
   return lines.join('\n');
 }
 
-export function SavedItemsPage({ onBack }: SavedItemsPageProps) {
+export function SavedItemsPage() {
   const { items, remove } = useSavedItems();
   const [copied, setCopied] = useState(false);
   const [publishTitle, setPublishTitle] = useState('Research collection');
@@ -117,7 +113,6 @@ export function SavedItemsPage({ onBack }: SavedItemsPageProps) {
 
   return (
     <div className="container">
-      <button className="back-btn" onClick={onBack}>← Back</button>
       <div className="member-grid-page__header">
         <h1 className="section-heading">Saved Items</h1>
         <p className="section-subheading">A private browser-local reading list for records you want to revisit.</p>

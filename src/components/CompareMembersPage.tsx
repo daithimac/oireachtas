@@ -12,7 +12,6 @@ interface CompareMembersPageProps {
   allMembers: Member[];
   loadingAllMembers: boolean;
   onNavigate: (view: View) => void;
-  onBack: () => void;
 }
 
 export function CompareMembersPage({
@@ -21,7 +20,6 @@ export function CompareMembersPage({
   allMembers,
   loadingAllMembers,
   onNavigate,
-  onBack,
 }: CompareMembersPageProps) {
   const [memberQuery, setMemberQuery] = useState('');
   const [activeIndex, setActiveIndex] = useState(0);
@@ -99,7 +97,6 @@ export function CompareMembersPage({
 
   return (
     <div className="container">
-      <button className="back-btn" onClick={onBack}>← Back</button>
       <div className="member-grid-page__header">
         <h1 className="section-heading">Compare Members</h1>
         <p className="section-subheading">Compare up to three members by activity, votes, constituency, offices, and committees.</p>
