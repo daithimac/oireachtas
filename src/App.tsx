@@ -88,31 +88,32 @@ function ordinalSuffix(value: number): string {
 
 function viewShareMeta(view: View, chamber: Chamber, houseNo: number): { title: string; description: string } {
   const chamberLabel = chamberName(chamber);
+  const ord = `${houseNo}${ordinalSuffix(houseNo)}`;
   switch (view.kind) {
     case 'global-debates':
-      return { title: `Oireachtas Explorer: ${chamberLabel} Debates`, description: `Official debate records for the ${houseNo} ${chamberLabel}.` };
+      return { title: `Oireachtas Explorer: ${chamberLabel} Debates`, description: `Browse debate transcripts from the ${ord} ${chamberLabel}.` };
     case 'global-votes':
-      return { title: `Oireachtas Explorer: ${chamberLabel} Votes`, description: `Chamber votes for the ${houseNo} ${chamberLabel}.` };
+      return { title: `Oireachtas Explorer: ${chamberLabel} Votes`, description: `Division results and tallies from the ${ord} ${chamberLabel}.` };
     case 'global-legislation':
-      return { title: `Oireachtas Explorer: ${chamberLabel} Legislation`, description: `Bills before the ${houseNo} ${chamberLabel}.` };
+      return { title: `Oireachtas Explorer: ${chamberLabel} Legislation`, description: `Track legislation through the ${ord} ${chamberLabel}.` };
     case 'vote-detail':
-      return { title: `Oireachtas Explorer: ${view.title} vote`, description: `Vote details and member tallies.` };
+      return { title: `Oireachtas Explorer: ${view.title} vote`, description: `Vote: ${view.title}. Full Tá/Níl breakdown and member tallies.` };
     case 'debate-viewer':
-      return { title: `Oireachtas Explorer: ${view.title}`, description: `Official debate transcript.` };
+      return { title: `Oireachtas Explorer: ${view.title}`, description: `Transcript: ${view.title}.` };
     case 'bill-viewer':
-      return { title: `Oireachtas Explorer: Bill ${view.billNo} of ${view.billYear}`, description: `Legislation record and documents.` };
+      return { title: `Oireachtas Explorer: Bill ${view.billNo} of ${view.billYear}`, description: `Bill ${view.billNo} of ${view.billYear} — stages, status, and documents.` };
     case 'member':
-      return { title: `Oireachtas Explorer: ${view.memberName}`, description: `${view.constituencyName ? view.constituencyName + '. ' : ''}Member profile — voting record, speeches, questions and bills.` };
+      return { title: `Oireachtas Explorer: ${view.memberName}`, description: `${view.constituencyName ? view.constituencyName + '. ' : ''}Profile — votes, speeches, questions and bills.` };
     case 'party':
-      return { title: `Oireachtas Explorer: ${view.partyName}`, description: `${view.partyName} members in the ${houseNo} ${chamberLabel}.` };
+      return { title: `Oireachtas Explorer: ${view.partyName}`, description: `${view.partyName} members in the ${ord} ${chamberLabel}.` };
     case 'members':
-      return { title: `Oireachtas Explorer: ${view.constituencyName}`, description: `Members representing ${view.constituencyName} in the ${houseNo} ${chamberLabel}.` };
+      return { title: `Oireachtas Explorer: ${view.constituencyName}`, description: `Members representing ${view.constituencyName} in the ${ord} ${chamberLabel}.` };
     case 'committee':
-      return { title: `Oireachtas Explorer: ${view.committeeName}`, description: `Committee membership and activity.` };
+      return { title: `Oireachtas Explorer: ${view.committeeName}`, description: `${view.committeeName} — members, meetings and activity.` };
     case 'compare':
       return { title: `Oireachtas Explorer: Compare Members`, description: `Compare voting records of ${chamberLabel} members.` };
     case 'search':
-      return { title: `Oireachtas Explorer: Search${view.query ? ` — ${view.query}` : ''}`, description: `Search members, debates, and legislation.` };
+      return { title: `Oireachtas Explorer: Search${view.query ? ` — ${view.query}` : ''}`, description: view.query ? `Results for "${view.query}" in the Oireachtas.` : `Search members, debates, and legislation.` };
     case 'saved':
       return { title: `Oireachtas Explorer: Saved Items`, description: `Your saved parliamentary research items.` };
     case 'collection':
@@ -219,6 +220,7 @@ export default function App() {
   const [constituencies, setConstituencies] = useState<Constituency[]>([]);
   const [allMembers, setAllMembers] = useState<Member[]>([]);
   const [globalShareOpen, setGlobalShareOpen] = useState(false);
+  const [globalShareMetaOverride, setGlobalShareMetaOverride] = useState<{ title: string; description: string } | null>(null);
   const [, setLoadingConstituencies] = useState(true);
   const [loadingMembers, setLoadingMembers] = useState(true);
   const [constituenciesError, setConstituenciesError] = useState<string | null>(null);
@@ -354,6 +356,7 @@ export default function App() {
 
   useEffect(() => {
     setGlobalShareOpen(false);
+    setGlobalShareMetaOverride(null);
   }, [view, chamber, houseNo]);
 
   const globalShareUrl = useMemo(() => (
@@ -651,6 +654,7 @@ export default function App() {
             chamber={chamber}
             houseNo={houseNo}
             onNavigate={navigate}
+            onShareMeta={setGlobalShareMetaOverride}
           />
         );
 
@@ -664,6 +668,7 @@ export default function App() {
             allMembers={allMembers}
             loadingAllMembers={loadingMembers}
             onSelectMember={handleSelectMember}
+            onShareMeta={setGlobalShareMetaOverride}
           />
         );
 
@@ -759,6 +764,7 @@ export default function App() {
             speechIdx={view.speechIdx}
             chamber={chamber}
             houseNo={houseNo}
+            onShareMeta={setGlobalShareMetaOverride}
           />
         );
 
@@ -772,6 +778,7 @@ export default function App() {
             allMembers={allMembers}
             onSelectMember={handleSelectMember}
             onNavigate={navigate}
+            onShareMeta={setGlobalShareMetaOverride}
           />
         );
 
@@ -783,6 +790,7 @@ export default function App() {
             chamber={chamber}
             houseNo={houseNo}
             allMembers={allMembers}
+            onShareMeta={setGlobalShareMetaOverride}
           />
         );
     }
@@ -843,9 +851,10 @@ export default function App() {
           </div>
         </div>
       )}
-      {globalShareOpen && globalShareUrl && (
-        <ShareModal url={globalShareUrl} title={viewShareMeta(view, chamber, houseNo).title} description={viewShareMeta(view, chamber, houseNo).description} onClose={() => { setGlobalShareOpen(false); }} />
-      )}
+      {globalShareOpen && globalShareUrl && (() => {
+        const meta = globalShareMetaOverride ?? viewShareMeta(view, chamber, houseNo);
+        return <ShareModal url={globalShareUrl} title={meta.title} description={meta.description} onClose={() => { setGlobalShareOpen(false); }} />;
+      })()}
       <main id="main-content" tabIndex={-1}>{renderView()}</main>
       <AttributionFooter />
     </div>

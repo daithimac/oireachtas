@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { ExternalLink, FileText, Library, ScrollText } from 'lucide-react';
 import { fetchVoteDebateContext, fetchVoteDetail } from '../api/oireachtas';
 import { useAsync } from '../hooks/useAsync';
@@ -16,6 +16,7 @@ interface VoteDetailPageProps {
   allMembers: Member[];
   onSelectMember: (memberUri: string, memberName: string, constituencyCode: string, constituencyName: string) => void;
   onNavigate: (view: View) => void;
+  onShareMeta?: (meta: { title: string; description: string }) => void;
 }
 
 function outcomeClass(outcome: string): string {
@@ -211,7 +212,7 @@ function VoteColumn({
   );
 }
 
-export function VoteDetailPage({ voteUri, title, chamber, houseNo, allMembers, onSelectMember, onNavigate }: VoteDetailPageProps) {
+export function VoteDetailPage({ voteUri, title, chamber, houseNo, allMembers, onSelectMember, onNavigate, onShareMeta }: VoteDetailPageProps) {
   const [shareOpen, setShareOpen] = useState(false);
   const fetcher = useCallback((signal: AbortSignal) =>
     fetchVoteDetail(voteUri, allMembers, signal),
@@ -219,6 +220,15 @@ export function VoteDetailPage({ voteUri, title, chamber, houseNo, allMembers, o
   );
   const { data: detail, loading, error } = useAsync(fetcher);
   const vote = detail?.vote;
+
+  useEffect(() => {
+    if (!vote || !onShareMeta) return;
+    onShareMeta({
+      title: `Oireachtas Explorer: ${vote.title} vote`,
+      description: `Outcome: ${vote.outcome}. Tá: ${vote.tallyFor}, Níl: ${vote.tallyAgainst}${vote.tallyAbstain > 0 ? `, Staon: ${vote.tallyAbstain}` : ''}.`,
+    });
+  }, [vote, onShareMeta]);
+
   const contextFetcher = useCallback((signal: AbortSignal) => {
     if (!vote) return Promise.reject(new Error('Vote context is not ready'));
     return fetchVoteDebateContext(vote, signal);

@@ -19,6 +19,7 @@ interface DebateViewerPageProps {
   chamber: Chamber;
   houseNo: number;
   onNavigateMember?: (view: View) => void;
+  onShareMeta?: (meta: { title: string; description: string }) => void;
 }
 
 function htmlToText(html: string): string {
@@ -36,7 +37,7 @@ function paragraphsToQuote(paragraphs: string[]): string {
   return paragraphs.map(htmlToText).filter(Boolean).join('\n\n');
 }
 
-export function DebateViewerPage({ xmlUri, debateSectionUri, title, focusMemberUri, speechIdx, chamber, houseNo }: DebateViewerPageProps) {
+export function DebateViewerPage({ xmlUri, debateSectionUri, title, focusMemberUri, speechIdx, chamber, houseNo, onShareMeta }: DebateViewerPageProps) {
   const [shareContext, setShareContext] = useState<{ url: string; title: string; description: string } | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [speakerFilter, setSpeakerFilter] = useState('');
@@ -58,6 +59,16 @@ export function DebateViewerPage({ xmlUri, debateSectionUri, title, focusMemberU
       }
     }
   }, [loading, segments, speechIdx]);
+
+  useEffect(() => {
+    if (!segments || !onShareMeta) return;
+    const speakerCount = new Set(segments.map(s => s.speakerName)).size;
+    const dateStr = debateDateFromUri(xmlUri);
+    onShareMeta({
+      title: `Oireachtas Explorer: ${title}`,
+      description: `${dateStr ? formatDateShort(dateStr) + '. ' : ''}${speakerCount} speaker${speakerCount !== 1 ? 's' : ''}. Full debate transcript.`,
+    });
+  }, [segments, onShareMeta, title, xmlUri]);
 
   const buildSegmentShareUrl = (memberUri: string | null, idx: number) =>
     window.location.origin + window.location.pathname +

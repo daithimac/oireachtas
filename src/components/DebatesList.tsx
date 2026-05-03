@@ -46,7 +46,7 @@ export function DebatesList({ memberUri, chamber, houseNo }: DebatesListProps) {
 
   return (
     <>
-      {shareDebate && debateShareUrl && <ShareModal url={debateShareUrl} title={`Oireachtas Explorer: ${shareDebate.title}`} description={`${shareDebate.chamber} debate, ${formatDateShort(shareDebate.date)}.`} onClose={() => { setShareDebate(null); }} />}
+      {shareDebate && debateShareUrl && <ShareModal url={debateShareUrl} title={`Oireachtas Explorer: ${shareDebate.title}`} description={`${shareDebate.chamber} debate, ${formatDateShort(shareDebate.date)}.${shareDebate.sections.length > 0 ? ` ${shareDebate.sections.length} section${shareDebate.sections.length !== 1 ? 's' : ''}.` : ''}`} onClose={() => { setShareDebate(null); }} />}
       <div className="debate-list">
         {allDebates.map((d) => {
           const canRead = !!(d.xmlUri && d.debateSectionUri);

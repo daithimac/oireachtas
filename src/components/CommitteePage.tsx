@@ -1,4 +1,4 @@
-import { useCallback, useMemo } from 'react';
+import { useCallback, useEffect, useMemo } from 'react';
 import { Users } from 'lucide-react';
 import type { Chamber, Member } from '../types';
 import { fetchAllMembers } from '../api/oireachtas';
@@ -14,6 +14,7 @@ interface CommitteePageProps {
   allMembers: Member[];
   loadingAllMembers: boolean;
   onSelectMember: (memberUri: string, memberName: string, constituencyCode: string, constituencyName: string, targetChamber?: Chamber, targetHouseNo?: number) => void;
+  onShareMeta?: (meta: { title: string; description: string }) => void;
 }
 
 const ROLE_ORDER: Record<string, number> = {
@@ -42,6 +43,7 @@ export function CommitteePage({
   allMembers,
   loadingAllMembers,
   onSelectMember,
+  onShareMeta,
 }: CommitteePageProps) {
   const paired = useMemo(() => pairedHouse(chamber, houseNo ?? 0), [chamber, houseNo]);
   const pairedFetcher = useCallback((signal: AbortSignal) => {
@@ -84,6 +86,14 @@ export function CommitteePage({
     dailCount > 0 ? `${dailCount} ${memberNoun('dail', dailCount !== 1)}` : '',
     seanadCount > 0 ? `${seanadCount} ${memberNoun('seanad', seanadCount !== 1)}` : '',
   ].filter(Boolean).join(' · ');
+
+  useEffect(() => {
+    if (!onShareMeta || loadingMembers) return;
+    onShareMeta({
+      title: `Oireachtas Explorer: ${committeeName}`,
+      description: `${committeeName}. ${committeeMembers.length} member${committeeMembers.length !== 1 ? 's' : ''}${membershipSummary ? ` (${membershipSummary})` : ''}.`,
+    });
+  }, [committeeName, committeeMembers.length, membershipSummary, loadingMembers, onShareMeta]);
 
   return (
     <div className="container">

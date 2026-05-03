@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback, type KeyboardEvent } from 'react';
+import { useState, useRef, useCallback, useEffect, type KeyboardEvent } from 'react';
 import { BarChart3, MessagesSquare, Vote, HelpCircle, ScrollText } from 'lucide-react';
 import { useAsync } from '../hooks/useAsync';
 import { fetchMember, fetchActivitySummary, fetchVoteBreakdown } from '../api/oireachtas';
@@ -20,6 +20,7 @@ interface MemberProfileProps {
   chamber: Chamber;
   houseNo: number;
   onNavigate: (view: View) => void;
+  onShareMeta?: (meta: { title: string; description: string }) => void;
 }
 
 function memberSince(memberCode: string): string {
@@ -82,7 +83,7 @@ const TAB_CONFIG: { key: ProfileTab; label: string; Icon: typeof BarChart3 }[] =
   { key: 'legislation', label: 'Legislation', Icon: ScrollText },
 ];
 
-export function MemberProfile({ memberUri, constituencyName, chamber, houseNo, onNavigate }: MemberProfileProps) {
+export function MemberProfile({ memberUri, constituencyName, chamber, houseNo, onNavigate, onShareMeta }: MemberProfileProps) {
   const [activeTab, setActiveTab] = useState<ProfileTab>('overview');
   const [photoFailed, setPhotoFailed] = useState(false);
   const tabRefs = useRef<Record<ProfileTab, HTMLButtonElement | null>>({
@@ -110,6 +111,15 @@ export function MemberProfile({ memberUri, constituencyName, chamber, houseNo, o
 
   const fetchBreakdownCb = useCallback((signal: AbortSignal) => fetchVoteBreakdown(memberUri, chamber, houseNo, signal), [memberUri, chamber, houseNo]);
   const { data: voteBreakdown, loading: breakdownLoading } = useAsync(fetchBreakdownCb);
+
+  useEffect(() => {
+    if (!member || !onShareMeta) return;
+    const currentOffice = member.offices.find(o => o.current || !o.endDate);
+    onShareMeta({
+      title: `Oireachtas Explorer: ${member.fullName}`,
+      description: `${member.party} · ${member.constituency}.${currentOffice ? ` ${currentOffice.name}.` : ''} Votes, speeches, questions and bills.`,
+    });
+  }, [member, onShareMeta]);
 
   if (loading) {
     return (

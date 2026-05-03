@@ -1,6 +1,6 @@
 import { useAsync } from '../hooks/useAsync';
 import { fetchBill } from '../api/oireachtas';
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { formatDateShort, billStatusLabel, billStatusClass } from '../utils/format';
 import { FileText, Download } from 'lucide-react';
 import type { Bill, BillDocument, Chamber, Member } from '../types';
@@ -14,12 +14,21 @@ interface BillViewerPageProps {
   chamber: Chamber;
   houseNo: number;
   allMembers: Member[];
+  onShareMeta?: (meta: { title: string; description: string }) => void;
 }
 
-export function BillViewerPage({ billNo, billYear, chamber, houseNo, allMembers }: BillViewerPageProps) {
+export function BillViewerPage({ billNo, billYear, chamber, houseNo, allMembers, onShareMeta }: BillViewerPageProps) {
   const fetcher = useCallback((signal: AbortSignal) => fetchBill(billNo, billYear, signal), [billNo, billYear]);
   const { data: bill, loading, error } = useAsync(fetcher);
   const [activeDocKey, setActiveDocKey] = useState('');
+
+  useEffect(() => {
+    if (!bill || !onShareMeta) return;
+    onShareMeta({
+      title: `Oireachtas Explorer: ${bill.title}`,
+      description: `${billStatusLabel(bill.status)} · ${bill.currentStage}. Bill ${bill.billNo} of ${bill.billYear}.`,
+    });
+  }, [bill, onShareMeta]);
 
   if (loading) {
     return (
