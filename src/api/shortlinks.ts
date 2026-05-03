@@ -38,7 +38,7 @@ export function isShortLinksEnabled(): boolean {
   return Boolean(WORKER_API_BASE);
 }
 
-export async function createShortLink(targetUrl: string): Promise<ShortLinkResponse> {
+export async function createShortLink(targetUrl: string, title?: string, description?: string): Promise<ShortLinkResponse> {
   const normalizedTarget = targetUrl.trim();
   if (!normalizedTarget) {
     throw new ShortLinkError('Missing target URL for short link creation.');
@@ -52,7 +52,7 @@ export async function createShortLink(targetUrl: string): Promise<ShortLinkRespo
     const response = await fetch(`${base}/shortlinks`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ targetUrl: normalizedTarget }),
+      body: JSON.stringify({ targetUrl: normalizedTarget, title, description }),
     });
 
     if (!response.ok) {

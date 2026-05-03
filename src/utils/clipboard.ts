@@ -20,17 +20,17 @@ export async function copyText(text: string): Promise<void> {
   }
 }
 
-export async function resolveShareUrl(url: string): Promise<string> {
+export async function resolveShareUrl(url: string, title?: string, description?: string): Promise<string> {
   try {
-    const shortLink = await createShortLink(url);
+    const shortLink = await createShortLink(url, title, description);
     return shortLink.shortUrl;
   } catch {
     return url;
   }
 }
 
-export async function copyShareUrl(url: string): Promise<string> {
-  const resolved = await resolveShareUrl(url);
+export async function copyShareUrl(url: string, title?: string, description?: string): Promise<string> {
+  const resolved = await resolveShareUrl(url, title, description);
   await copyText(resolved);
   return resolved;
 }

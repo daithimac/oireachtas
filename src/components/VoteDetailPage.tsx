@@ -243,7 +243,14 @@ export function VoteDetailPage({ voteUri, title, chamber, houseNo, allMembers, o
 
   return (
     <div className="container vote-detail-page">
-      {shareOpen && <ShareModal url={shareUrl} onClose={() => { setShareOpen(false); }} />}
+      {shareOpen && (
+        <ShareModal 
+          url={shareUrl} 
+          title={`Oireachtas Explorer: ${vote?.title ?? title} vote`}
+          description={vote ? `Outcome: ${vote.outcome}. Tá: ${vote.tallyFor}, Níl: ${vote.tallyAgainst}${vote.tallyAbstain > 0 ? `, Staon: ${vote.tallyAbstain}` : ''}.` : undefined}
+          onClose={() => { setShareOpen(false); }} 
+        />
+      )}
 
       <div className="vote-detail-hero">
         <div>
@@ -255,6 +262,15 @@ export function VoteDetailPage({ voteUri, title, chamber, houseNo, allMembers, o
             {vote?.topic && <span>{vote.topic}</span>}
           </div>
         </div>
+        <button 
+          className="icon-btn icon-btn--primary" 
+          onClick={() => { setShareOpen(true); }} 
+          aria-label="Share vote" 
+          title="Share vote" 
+          style={{ alignSelf: 'flex-start', flexShrink: 0, padding: '0.5rem', marginLeft: '1rem', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-secondary)' }}
+        >
+          <Share2 size={24} />
+        </button>
       </div>
 
       {loading && (

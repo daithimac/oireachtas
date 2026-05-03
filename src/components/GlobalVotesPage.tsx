@@ -34,7 +34,7 @@ export function GlobalVotesPage({ chamber, houseNo, onNavigate }: GlobalVotesPag
   const [chamberType, setChamberType] = useState<Extract<ChamberType, 'house' | 'committee'>>('house');
   const [query, setQuery] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
-  const [shareUrl, setShareUrl] = useState<string | null>(null);
+  const [shareContext, setShareContext] = useState<{ url: string; title?: string; description?: string } | null>(null);
 
   const fetcher = useCallback((skip: number, limit: number, signal?: AbortSignal) =>
     fetchChamberVotes(limit, skip, chamber, houseNo, signal, dateStart, dateEnd, outcome, chamberType, searchQuery),
@@ -45,13 +45,23 @@ export function GlobalVotesPage({ chamber, houseNo, onNavigate }: GlobalVotesPag
     usePaginatedList<ChamberVote>(fetcher, 'votes', PAGE_SIZE);
 
   const openShare = (vote: ChamberVote) => {
-    setShareUrl(window.location.origin + window.location.pathname +
-      viewToHash({ kind: 'vote-detail', voteUri: vote.uri, title: vote.title }, chamber, houseNo));
+    const url = window.location.origin + window.location.pathname +
+      viewToHash({ kind: 'vote-detail', voteUri: vote.uri, title: vote.title }, chamber, houseNo);
+    const title = `Oireachtas Explorer: ${vote.title} vote`;
+    const description = `Outcome: ${vote.outcome}. Tá: ${vote.tallyFor}, Níl: ${vote.tallyAgainst}.`;
+    setShareContext({ url, title, description });
   };
 
   return (
     <div className="container votes-page">
-      {shareUrl && <ShareModal url={shareUrl} onClose={() => { setShareUrl(null); }} />}
+      {shareContext && (
+        <ShareModal 
+          url={shareContext.url} 
+          title={shareContext.title} 
+          description={shareContext.description} 
+          onClose={() => { setShareContext(null); }} 
+        />
+      )}
 
       <div className="votes-page__header">
         <div>

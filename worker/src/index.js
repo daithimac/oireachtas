@@ -236,6 +236,16 @@ export function shortLinkUrl(request, env, code) {
   return `${shortLinkBaseUrl(request, env)}/s/${code}`;
 }
 
+function escapeHtml(unsafe) {
+  if (!unsafe) return '';
+  return unsafe
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
+
 async function handleCreateShortLink(request, env) {
   const store = collectionStore(env);
   if (!store) {
@@ -263,6 +273,8 @@ async function handleCreateShortLink(request, env) {
 
   const payload = {
     targetUrl: target.value,
+    title: typeof body?.title === 'string' ? body.title.slice(0, 200) : undefined,
+    description: typeof body?.description === 'string' ? body.description.slice(0, 1000) : undefined,
     createdAt: new Date().toISOString(),
   };
 
@@ -290,6 +302,40 @@ async function handleShortLinkRedirect(request, env, code) {
   const entry = await store.get(`shortlink:${code}`, 'json');
   if (!entry || !isNonEmptyString(entry.targetUrl)) {
     return json({ error: 'Short link not found.' }, 404, request, env);
+  }
+
+  const userAgent = request.headers.get('User-Agent') || '';
+  const isBot = /bot|facebook|twitter|whatsapp|telegram|discord|slack|linkedin|preview/i.test(userAgent);
+
+  if (isBot && (entry.title || entry.description)) {
+    const safeTitle = escapeHtml(entry.title || 'Oireachtas Explorer');
+    const safeDesc = escapeHtml(entry.description || '');
+    const safeUrl = escapeHtml(shortLinkUrl(request, env, code));
+    const safeTarget = escapeHtml(entry.targetUrl);
+    
+    const html = `<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>${safeTitle}</title>
+<meta property="og:title" content="${safeTitle}">
+<meta property="og:description" content="${safeDesc}">
+<meta property="og:url" content="${safeUrl}">
+<meta property="og:type" content="website">
+<meta name="twitter:card" content="summary">
+<meta http-equiv="refresh" content="0;url=${safeTarget}">
+</head>
+<body>
+  <p>Redirecting to <a href="${safeTarget}">${safeTarget}</a>...</p>
+</body>
+</html>`;
+    return new Response(html, {
+      status: 200,
+      headers: {
+        'Content-Type': 'text/html; charset=utf-8',
+        'Cache-Control': 'public, max-age=300',
+      },
+    });
   }
 
   return Response.redirect(entry.targetUrl, 302);
