@@ -10,5 +10,6 @@ preview_id = "9de4bea0acff4488aae11b081e960751"
 
 [vars]
 APP_BASE_URL = "https://oireachtas-explorer.ie"
-ALLOWED_ORIGINS = "https://oireachtas-explorer.ie,http://localhost:5174,http://127.0.0.1:5174"
+SHORTLINK_BASE_URL = "https://go.oireachtas-explorer.ie"
+ALLOWED_ORIGINS = "https://oireachtas-explorer.ie,http://localhost:5174,http://127.0.0.1:5174,https://go.oireachtas-explorer.ie"
 CACHE_TTL_SECONDS = "86400"

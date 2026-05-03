@@ -278,7 +278,7 @@ id = "<your-production-kv-namespace-id>"
 preview_id = "<your-preview-kv-namespace-id>"
 ```
 
-3. Confirm `APP_BASE_URL` and `ALLOWED_ORIGINS` in
+3. Confirm `APP_BASE_URL`, `SHORTLINK_BASE_URL`, and `ALLOWED_ORIGINS` in
    `worker/wrangler.toml` match your live site domain.
 
 4. Redeploy the Worker:
@@ -291,6 +291,11 @@ After that, `Saved Items` can publish a read-only public collection
 URL that anyone can open in the app, and the share dialogs will copy
 persistent Worker-backed short links instead of the long internal hash
 routes.
+
+If you attach a custom domain such as `https://go.oireachtas-explorer.ie`
+to the Worker, set `SHORTLINK_BASE_URL` to that hostname. The Worker will
+then return branded short links even if your app still talks to the
+underlying `workers.dev` API URL.
 
 ## Deploying to GitHub Pages
 

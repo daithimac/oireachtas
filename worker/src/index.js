@@ -1,5 +1,6 @@
 const DEFAULT_ALLOWED_ORIGINS = [
   'https://oireachtas-explorer.ie',
+  'https://go.oireachtas-explorer.ie',
   'http://localhost:5174',
   'http://127.0.0.1:5174',
 ];
@@ -9,6 +10,7 @@ const MAX_DESCRIPTION_LENGTH = 400;
 const MAX_BODY_BYTES = 250000;
 const SHORTLINK_CODE_LENGTH = 10;
 const DEFAULT_APP_BASE_URL = 'https://oireachtas-explorer.ie';
+const DEFAULT_SHORTLINK_BASE_URL = 'https://go.oireachtas-explorer.ie';
 
 function allowedOrigins(env) {
   const raw = env.ALLOWED_ORIGINS || '';
@@ -66,6 +68,16 @@ function collectionStore(env) {
 
 function appBaseUrl(env) {
   return (env.APP_BASE_URL || DEFAULT_APP_BASE_URL).replace(/\/+$/, '');
+}
+
+function shortLinkBaseUrl(request, env) {
+  const configuredBase = typeof env.SHORTLINK_BASE_URL === 'string' ? env.SHORTLINK_BASE_URL.trim() : '';
+  if (configuredBase) {
+    return configuredBase.replace(/\/+$/, '');
+  }
+
+  const requestUrl = new URL(request.url);
+  return requestUrl.origin.replace(/\/+$/, '');
 }
 
 function slugifySegment(text) {
@@ -220,9 +232,8 @@ async function allocateShortCode(store, targetUrl) {
   throw new Error('Unable to allocate a unique short link code.');
 }
 
-function shortLinkUrl(request, code) {
-  const requestUrl = new URL(request.url);
-  return `${requestUrl.origin}/s/${code}`;
+export function shortLinkUrl(request, env, code) {
+  return `${shortLinkBaseUrl(request, env)}/s/${code}`;
 }
 
 async function handleCreateShortLink(request, env) {
@@ -261,7 +272,7 @@ async function handleCreateShortLink(request, env) {
 
   return json({
     code,
-    shortUrl: shortLinkUrl(request, code),
+    shortUrl: shortLinkUrl(request, env, code),
     targetUrl: target.value,
   }, 201, request, env);
 }
