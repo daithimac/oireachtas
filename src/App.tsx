@@ -22,7 +22,7 @@ import { CommitteePage } from './components/CommitteePage';
 import { PartyBreakdown } from './components/PartyBreakdown';
 import { ShareModal } from './components/ShareModal';
 import { viewToHash, parseHash, resolveGlobalShareUrl } from './utils/routing';
-import { formatDateShort, partyColor } from './utils/format';
+import { formatDateShort, partyColor, billStatusLabel } from './utils/format';
 
 function latestForChamber(c: Chamber): number {
   return c === 'seanad' ? LATEST_SEANAD : LATEST_DAIL;
@@ -83,6 +83,42 @@ function ordinalSuffix(value: number): string {
     case 2: return 'nd';
     case 3: return 'rd';
     default: return 'th';
+  }
+}
+
+function viewShareMeta(view: View, chamber: Chamber, houseNo: number): { title: string; description: string } {
+  const chamberLabel = chamberName(chamber);
+  switch (view.kind) {
+    case 'global-debates':
+      return { title: `Oireachtas Explorer: ${chamberLabel} Debates`, description: `Official debate records for the ${houseNo} ${chamberLabel}.` };
+    case 'global-votes':
+      return { title: `Oireachtas Explorer: ${chamberLabel} Votes`, description: `Chamber votes for the ${houseNo} ${chamberLabel}.` };
+    case 'global-legislation':
+      return { title: `Oireachtas Explorer: ${chamberLabel} Legislation`, description: `Bills before the ${houseNo} ${chamberLabel}.` };
+    case 'vote-detail':
+      return { title: `Oireachtas Explorer: ${view.title} vote`, description: `Vote details and member tallies.` };
+    case 'debate-viewer':
+      return { title: `Oireachtas Explorer: ${view.title}`, description: `Official debate transcript.` };
+    case 'bill-viewer':
+      return { title: `Oireachtas Explorer: Bill ${view.billNo} of ${view.billYear}`, description: `Legislation record and documents.` };
+    case 'member':
+      return { title: `Oireachtas Explorer: ${view.memberName}`, description: `${view.constituencyName ? view.constituencyName + '. ' : ''}Member profile — voting record, speeches, questions and bills.` };
+    case 'party':
+      return { title: `Oireachtas Explorer: ${view.partyName}`, description: `${view.partyName} members in the ${houseNo} ${chamberLabel}.` };
+    case 'members':
+      return { title: `Oireachtas Explorer: ${view.constituencyName}`, description: `Members representing ${view.constituencyName} in the ${houseNo} ${chamberLabel}.` };
+    case 'committee':
+      return { title: `Oireachtas Explorer: ${view.committeeName}`, description: `Committee membership and activity.` };
+    case 'compare':
+      return { title: `Oireachtas Explorer: Compare Members`, description: `Compare voting records of ${chamberLabel} members.` };
+    case 'search':
+      return { title: `Oireachtas Explorer: Search${view.query ? ` — ${view.query}` : ''}`, description: `Search members, debates, and legislation.` };
+    case 'saved':
+      return { title: `Oireachtas Explorer: Saved Items`, description: `Your saved parliamentary research items.` };
+    case 'collection':
+      return { title: `Oireachtas Explorer: Public Collection`, description: `A curated collection of parliamentary items.` };
+    default:
+      return { title: 'Oireachtas Explorer', description: 'Unofficial explorer for Irish parliamentary data.' };
   }
 }
 
@@ -808,7 +844,7 @@ export default function App() {
         </div>
       )}
       {globalShareOpen && globalShareUrl && (
-        <ShareModal url={globalShareUrl} onClose={() => { setGlobalShareOpen(false); }} />
+        <ShareModal url={globalShareUrl} title={viewShareMeta(view, chamber, houseNo).title} description={viewShareMeta(view, chamber, houseNo).description} onClose={() => { setGlobalShareOpen(false); }} />
       )}
       <main id="main-content" tabIndex={-1}>{renderView()}</main>
       <AttributionFooter />

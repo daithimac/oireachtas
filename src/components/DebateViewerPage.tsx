@@ -37,7 +37,7 @@ function paragraphsToQuote(paragraphs: string[]): string {
 }
 
 export function DebateViewerPage({ xmlUri, debateSectionUri, title, focusMemberUri, speechIdx, chamber, houseNo }: DebateViewerPageProps) {
-  const [shareUrl, setShareUrl] = useState<string | null>(null);
+  const [shareContext, setShareContext] = useState<{ url: string; title: string; description: string } | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [speakerFilter, setSpeakerFilter] = useState('');
   const [copiedId, setCopiedId] = useState<string | null>(null);
@@ -110,7 +110,7 @@ export function DebateViewerPage({ xmlUri, debateSectionUri, title, focusMemberU
 
   return (
     <div style={{ maxWidth: '800px', margin: '0 auto', padding: '2rem 1rem' }}>
-      {shareUrl && <ShareModal url={shareUrl} onClose={() => { setShareUrl(null); }} />}
+      {shareContext && <ShareModal url={shareContext.url} title={shareContext.title} description={shareContext.description} onClose={() => { setShareContext(null); }} />}
 
       <div className="record-title-row">
         <h1 style={{ fontSize: '2rem', marginBottom: '1rem', color: 'var(--color-text-primary)', overflowWrap: 'break-word', wordBreak: 'break-word' }}>{title}</h1>
@@ -195,7 +195,15 @@ export function DebateViewerPage({ xmlUri, debateSectionUri, title, focusMemberU
               <div key={idx} id={`speech-${idx}`} className="transcript-segment" style={{ position: 'relative', display: 'flex', gap: '1rem', marginBottom: '2rem', alignItems: 'flex-start', padding: isFocal ? '1rem' : '0.5rem 0.5rem 0.5rem 0', paddingTop: '0.5rem', backgroundColor: isFocal ? 'rgba(0, 100, 0, 0.05)' : 'transparent', borderRadius: '8px', borderLeft: isFocal ? '4px solid var(--color-accent)' : 'none' }}>
                 <button
                   className="card-link-btn"
-                  onClick={() => { setShareUrl(segmentUrl); }}
+                  onClick={() => {
+                    const segUrl = buildSegmentShareUrl(s.memberUri, idx);
+                    const plainText = paragraphsToQuote(s.paragraphs);
+                    setShareContext({
+                      url: segUrl,
+                      title: `Oireachtas Explorer: ${s.speakerName} in ${title}`,
+                      description: plainText.slice(0, 160) + (plainText.length > 160 ? '…' : ''),
+                    });
+                  }}
                   aria-label={`Copy link to ${s.speakerName}'s contribution`}
                 >
                   <Link size={14} />

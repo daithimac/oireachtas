@@ -166,7 +166,7 @@ export function BillCard({ bill, chamber, houseNo, animationIndex = 0, showDetai
   return (
     <>
       {pdfOpen && <PdfModal bill={bill} onClose={() => { setPdfOpen(false); }} />}
-      {shareOpen && <ShareModal url={window.location.origin + window.location.pathname + detailHash} onClose={() => { setShareOpen(false); }} />}
+      {shareOpen && <ShareModal url={window.location.origin + window.location.pathname + detailHash} title={`Oireachtas Explorer: ${bill.title}`} description={`${billStatusLabel(bill.status)}${bill.currentStage ? ` · ${bill.currentStage}` : ''}. Bill ${bill.billNo} of ${bill.billYear}.`} onClose={() => { setShareOpen(false); }} />}
 
       <div className="bill-card" style={{ animationDelay: `${animationIndex * 0.05}s`, position: 'relative' }}>
         <button className="card-link-btn" onClick={() => { setShareOpen(true); }} aria-label={`Copy link to ${bill.title}`}>
