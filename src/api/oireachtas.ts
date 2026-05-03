@@ -160,6 +160,32 @@ async function fetchScopedVotePage(
   };
 }
 
+
+export interface HouseResult {
+  house: {
+    dateRange: {
+      start: string;
+      end: string | null;
+    };
+  };
+}
+
+export async function fetchHouseDateRange(chamber: Chamber, houseNo: number, signal?: AbortSignal): Promise<{ start: string; end: string }> {
+  try {
+    const data = await apiFetch<OireachtasResult<HouseResult>>('/houses', { chamber_id: houseUri(chamber, houseNo) }, signal);
+    if (data.results.length > 0) {
+      const range = data.results[0].house.dateRange;
+      return {
+        start: range.start,
+        end: range.end ?? new Date().toISOString().split('T')[0],
+      };
+    }
+  } catch (e) {
+    // Ignore error and fall back to getHouseDateRange
+  }
+  return getHouseDateRange(chamber, houseNo);
+}
+
 export function clearApiCache(): void {
   responseCache.clear();
 }
@@ -197,8 +223,7 @@ export async function fetchConstituencies(
 
 // ── Members ────────────────────────────────────────────────────────────────────
 
-function extractParty(memberships: MembershipRaw[], chamber: Chamber, houseNo: number): string {
-  const houseRange = getHouseDateRange(chamber, houseNo);
+function extractParty(memberships: MembershipRaw[], chamber: Chamber, houseNo: number, houseRange: {start: string, end: string}): string {
   let selectedParty = '';
   let selectedStart = '';
   let selectedEnd = '';
@@ -263,8 +288,7 @@ function extractCommittees(memberships: MembershipRaw[], chamber: Chamber, house
   return [];
 }
 
-function extractOffices(memberships: MembershipRaw[], chamber: Chamber, houseNo: number): OfficeHolding[] {
-  const houseRange = getHouseDateRange(chamber, houseNo);
+function extractOffices(memberships: MembershipRaw[], chamber: Chamber, houseNo: number, houseRange: {start: string, end: string}): OfficeHolding[] {
   const offices = new Map<string, OfficeHolding>();
 
   for (const m of memberships) {
@@ -305,7 +329,7 @@ function extractOffices(memberships: MembershipRaw[], chamber: Chamber, houseNo:
   return Array.from(offices.values());
 }
 
-function toMember(r: MemberResult, chamber?: Chamber, houseNo?: number): Member {
+function toMember(r: MemberResult, chamber?: Chamber, houseNo?: number, houseRange?: {start: string, end: string}): Member {
   const m = r.member;
   const c = extractConstituency(m.memberships);
   return {
@@ -317,13 +341,13 @@ function toMember(r: MemberResult, chamber?: Chamber, houseNo?: number): Member 
     chamber: chamber ?? 'dail',
     houseNo: houseNo ?? defaultHouseNo(chamber ?? 'dail'),
     party: chamber !== undefined && houseNo !== undefined
-      ? extractParty(m.memberships, chamber, houseNo)
+      ? extractParty(m.memberships, chamber, houseNo, houseRange!)
       : 'Independent',
     constituency: c.name,
     constituencyCode: c.code,
     photoUrl: getMemberPhotoUrl(m.uri),
     offices: chamber !== undefined && houseNo !== undefined
-      ? extractOffices(m.memberships, chamber, houseNo)
+      ? extractOffices(m.memberships, chamber, houseNo, houseRange!)
       : [],
     committees: chamber !== undefined && houseNo !== undefined
       ? extractCommittees(m.memberships, chamber, houseNo)
@@ -343,7 +367,8 @@ export async function fetchMembersByConstituency(
     { const_code: constituencyCode, chamber, house_no: resolvedHouseNo, limit: 50 },
     signal
   );
-  return data.results.map(r => toMember(r, chamber, resolvedHouseNo));
+  const houseRange = await fetchHouseDateRange(chamber, resolvedHouseNo, signal);
+  return data.results.map(r => toMember(r, chamber, resolvedHouseNo, houseRange));
 }
 
 export async function fetchAllMembers(
@@ -367,7 +392,8 @@ export async function fetchMember(memberUri: string, chamber: Chamber, houseNo: 
     signal
   );
   if (data.results.length === 0) return null;
-  return toMember(data.results[0], chamber, houseNo);
+  const houseRange = await fetchHouseDateRange(chamber, houseNo, signal);
+  return toMember(data.results[0], chamber, houseNo, houseRange);
 }
 
 // ── Debates ────────────────────────────────────────────────────────────────────
@@ -448,7 +474,7 @@ export async function fetchGlobalDebates(
   }
 
   if (!dateStart && chamberType === 'committee' && houseNo) {
-    const range = getHouseDateRange(chamber, houseNo);
+    const range = await fetchHouseDateRange(chamber, houseNo, signal);
     params.date_start = range.start;
     params.date_end = range.end;
   } else {
@@ -473,7 +499,7 @@ export async function fetchCommitteeDebateSearch(
   dateEnd?: string,
   signal?: AbortSignal
 ): Promise<{ debates: Debate[]; total: number }> {
-  const range = getHouseDateRange(chamber, houseNo);
+  const range = await fetchHouseDateRange(chamber, houseNo, signal);
   const pageSize = 100;
   const baseParams: Record<string, string | number> = {
     chamber_type: 'committee',
@@ -624,7 +650,7 @@ export async function fetchChamberVotes(
   chamberType: ChamberType = 'house',
   query?: string
 ): Promise<{ votes: ChamberVote[]; total: number }> {
-  const range = getHouseDateRange(chamber, houseNo);
+  const range = await fetchHouseDateRange(chamber, houseNo, signal);
   const params: Record<string, string | number> = {
     chamber_type: chamberType,
     date_start: dateStart ?? range.start,
@@ -705,7 +731,7 @@ export async function fetchVoteDebateContext(
 // ── Questions ─────────────────────────────────────────────────────────────────
 
 export async function fetchQuestions(memberUri: string, limit = 20, skip = 0, chamber: Chamber, houseNo: number, signal?: AbortSignal, dateStart?: string, dateEnd?: string): Promise<{ questions: Question[]; total: number }> {
-  const { start, end } = getHouseDateRange(chamber, houseNo);
+  const { start, end } = await fetchHouseDateRange(chamber, houseNo, signal);
   const params: Record<string, string | number> = {
     member_id: memberUri,
     qtype: 'oral,written',
@@ -767,7 +793,7 @@ export async function fetchGlobalQuestions(
   houseNo: number,
   signal?: AbortSignal
 ): Promise<{ questions: Question[]; total: number }> {
-  const { start, end } = getHouseDateRange(chamber, houseNo);
+  const { start, end } = await fetchHouseDateRange(chamber, houseNo, signal);
   const data = await apiFetch<OireachtasResult<QuestionResult>>(
     '/questions',
     { chamber, qtype: 'oral,written', limit, skip, date_start: start, date_end: end },

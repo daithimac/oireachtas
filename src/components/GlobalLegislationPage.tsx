@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import type { Bill, Chamber, Member } from '../types';
-import { fetchGlobalLegislation } from '../api/oireachtas';
+import { fetchGlobalLegislation, fetchHouseDateRange } from '../api/oireachtas';
 import { usePaginatedList } from '../hooks/usePaginatedList';
-import { getHouseDateRange, getHousePresetYearRange, houseLabel } from '../utils/dail';
+import { getHousePresetYearRange, houseLabel } from '../utils/dail';
 import { formatDateShort } from '../utils/format';
 import { BillCard } from './BillCard';
 
@@ -58,17 +58,25 @@ interface GlobalLegislationPageProps {
 }
 
 export function GlobalLegislationPage({ chamber, houseNo, allMembers }: GlobalLegislationPageProps) {
-  const houseRange = useMemo(() => getHouseDateRange(chamber, houseNo), [chamber, houseNo]);
-  const presetYear = useMemo(() => getHousePresetYearRange(chamber, houseNo), [chamber, houseNo]);
+  const [houseRange, setHouseRange] = useState({ start: '', end: '' });
+  const [presetYear, setPresetYear] = useState({ start: '', end: '' });
   const [activeTab, setActiveTab] = useState<LegislationTab>('All');
-  const [dateStart, setDateStart] = useState(presetYear.start);
-  const [dateEnd, setDateEnd] = useState(presetYear.end);
+  const [dateStart, setDateStart] = useState('');
+  const [dateEnd, setDateEnd] = useState('');
 
   useEffect(() => {
-    setDateStart(presetYear.start);
-    setDateEnd(presetYear.end);
-    setActiveTab('All');
-  }, [presetYear.start, presetYear.end]);
+    let active = true;
+    void fetchHouseDateRange(chamber, houseNo).then(r => {
+      if (!active) return;
+      setHouseRange(r);
+      const py = getHousePresetYearRange(r);
+      setPresetYear(py);
+      setDateStart(py.start);
+      setDateEnd(py.end);
+      setActiveTab('All');
+    });
+    return () => { active = false; };
+  }, [chamber, houseNo]);
 
   const effectiveStart = clampDate(dateStart || houseRange.start, houseRange.start, houseRange.end);
   const effectiveEnd = clampDate(dateEnd || houseRange.end, houseRange.start, houseRange.end);

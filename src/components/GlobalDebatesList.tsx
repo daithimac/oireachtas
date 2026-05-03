@@ -1,10 +1,10 @@
 import { useCallback, useState, useEffect, useMemo } from 'react';
 import { usePaginatedList } from '../hooks/usePaginatedList';
 import { useAsync } from '../hooks/useAsync';
-import { fetchCommitteeDebateIndex, fetchCommitteeDebateSearch, fetchGlobalDebates, type ChamberType, type CommitteeDebateIndexItem } from '../api/oireachtas';
+import { fetchCommitteeDebateIndex, fetchCommitteeDebateSearch, fetchGlobalDebates, fetchHouseDateRange, type ChamberType, type CommitteeDebateIndexItem } from '../api/oireachtas';
 import type { Chamber, Debate, View } from '../types';
 import { formatDateShort } from '../utils/format';
-import { getHouseDateRange, chamberName } from '../utils/dail';
+import { chamberName } from '../utils/dail';
 import { DEFAULT_PAGE_SIZE } from '../constants';
 
 interface GlobalDebatesListProps {
@@ -85,10 +85,14 @@ export function GlobalDebatesList({ chamber, houseNo, onNavigateToDebate }: Glob
   const [committeeQuery, setCommitteeQuery] = useState('');
 
   useEffect(() => {
-    const range = getHouseDateRange(chamber, houseNo);
-    setDateStart(range.start);
-    const today = new Date().toISOString().split('T')[0];
-    setDateEnd(range.end > today ? today : range.end);
+    let active = true;
+    void fetchHouseDateRange(chamber, houseNo).then(range => {
+      if (!active) return;
+      setDateStart(range.start);
+      const today = new Date().toISOString().split('T')[0];
+      setDateEnd(range.end > today ? today : range.end);
+    });
+    return () => { active = false; };
   }, [chamber, houseNo]);
 
   useEffect(() => {

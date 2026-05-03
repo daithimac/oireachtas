@@ -1,10 +1,10 @@
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Link, Share2, Vote } from 'lucide-react';
-import { fetchChamberVotes } from '../api/oireachtas';
+import { fetchChamberVotes, fetchHouseDateRange } from '../api/oireachtas';
 import type { ChamberType } from '../api/oireachtas';
 import { usePaginatedList } from '../hooks/usePaginatedList';
 import type { Chamber, ChamberVote, View } from '../types';
-import { getHouseDateRange, chamberName } from '../utils/dail';
+import { chamberName } from '../utils/dail';
 import { formatDateShort } from '../utils/format';
 import { viewToHash } from '../utils/routing';
 import { ShareModal } from './ShareModal';
@@ -27,9 +27,20 @@ function outcomeClass(outcome: string): string {
 
 
 export function GlobalVotesPage({ chamber, houseNo, onNavigate }: GlobalVotesPageProps) {
-  const range = useMemo(() => getHouseDateRange(chamber, houseNo), [chamber, houseNo]);
-  const [dateStart, setDateStart] = useState(range.start);
-  const [dateEnd, setDateEnd] = useState(range.end);
+  const [range, setRange] = useState({ start: '', end: '' });
+  const [dateStart, setDateStart] = useState('');
+  const [dateEnd, setDateEnd] = useState('');
+
+  useEffect(() => {
+    let active = true;
+    void fetchHouseDateRange(chamber, houseNo).then(r => {
+      if (!active) return;
+      setRange(r);
+      setDateStart(r.start);
+      setDateEnd(r.end);
+    });
+    return () => { active = false; };
+  }, [chamber, houseNo]);
   const [outcome, setOutcome] = useState('');
   const [chamberType, setChamberType] = useState<Extract<ChamberType, 'house' | 'committee'>>('house');
   const [query, setQuery] = useState('');

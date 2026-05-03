@@ -1,10 +1,10 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Search, Scale } from 'lucide-react';
-import { fetchActivitySummary, fetchVoteBreakdown } from '../api/oireachtas';
+import { fetchActivitySummary, fetchVoteBreakdown, fetchHouseDateRange } from '../api/oireachtas';
 import { useAsync } from '../hooks/useAsync';
 import type { ActivitySummary, Chamber, Member, VoteBreakdown, View } from '../types';
 import { formatDateShort, partyColor } from '../utils/format';
-import { getHouseDateRange, getHousePresetYearRange } from '../utils/dail';
+import { getHousePresetYearRange } from '../utils/dail';
 
 interface CompareMembersPageProps {
   chamber: Chamber;
@@ -25,15 +25,24 @@ export function CompareMembersPage({
   const [activeIndex, setActiveIndex] = useState(0);
   const [pickerOpen, setPickerOpen] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
-  const houseRange = useMemo(() => getHouseDateRange(chamber, houseNo), [chamber, houseNo]);
-  const yearPresetRange = useMemo(() => getHousePresetYearRange(chamber, houseNo), [chamber, houseNo]);
-  const [dateStart, setDateStart] = useState(houseRange.start);
-  const [dateEnd, setDateEnd] = useState(houseRange.end);
+  const [houseRange, setHouseRange] = useState({ start: '', end: '' });
+  const [yearPresetRange, setYearPresetRange] = useState({ start: '', end: '' });
+  const [dateStart, setDateStart] = useState('');
+  const [dateEnd, setDateEnd] = useState('');
 
   useEffect(() => {
-    setDateStart(houseRange.start);
-    setDateEnd(houseRange.end);
-  }, [houseRange]);
+    let active = true;
+    void fetchHouseDateRange(chamber, houseNo).then(r => {
+      if (!active) return;
+      setHouseRange(r);
+      const py = getHousePresetYearRange(r);
+      setYearPresetRange(py);
+      setDateStart(r.start);
+      setDateEnd(r.end);
+    });
+    return () => { active = false; };
+  }, [chamber, houseNo]);
+
 
   const sortedMembers = useMemo(() =>
     [...allMembers].sort((a, b) => a.lastName.localeCompare(b.lastName) || a.firstName.localeCompare(b.firstName)),

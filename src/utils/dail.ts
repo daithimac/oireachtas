@@ -71,9 +71,8 @@ export function getHouseDateRange(chamber: Chamber, houseNo: number): { start: s
   return { start: `${start}-01-01`, end: dayBefore(`${nextStartYear}-01-01`) };
 }
 
-export function getHousePresetYearRange(chamber: Chamber, houseNo: number): { start: string; end: string } {
+export function getHousePresetYearRange(range: { start: string; end: string }): { start: string; end: string } {
   const today = isoDate(new Date());
-  const range = getHouseDateRange(chamber, houseNo);
   const currentYearStart = `${today.slice(0, 4)}-01-01`;
 
   if (currentYearStart <= range.end) {
