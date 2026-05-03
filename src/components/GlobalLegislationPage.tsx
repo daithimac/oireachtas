@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import type { Bill, Chamber, Member } from '../types';
 import { fetchGlobalLegislation, fetchHouseDateRange } from '../api/oireachtas';
 import { usePaginatedList } from '../hooks/usePaginatedList';
-import { getHousePresetYearRange, houseLabel } from '../utils/dail';
+import { getHouseDateRange, getHousePresetYearRange, houseLabel } from '../utils/dail';
 import { formatDateShort } from '../utils/format';
 import { BillCard } from './BillCard';
 
@@ -17,7 +17,9 @@ function clampDate(value: string, min: string, max: string): string {
 }
 
 function daysBefore(dateIso: string, days: number, min: string): string {
+  if (!dateIso) return '';
   const date = new Date(`${dateIso}T00:00:00Z`);
+  if (isNaN(date.getTime())) return '';
   date.setUTCDate(date.getUTCDate() - days);
   const next = date.toISOString().split('T')[0];
   return next < min ? min : next;
@@ -58,8 +60,8 @@ interface GlobalLegislationPageProps {
 }
 
 export function GlobalLegislationPage({ chamber, houseNo, allMembers }: GlobalLegislationPageProps) {
-  const [houseRange, setHouseRange] = useState({ start: '', end: '' });
-  const [presetYear, setPresetYear] = useState({ start: '', end: '' });
+  const [houseRange, setHouseRange] = useState(() => getHouseDateRange(chamber, houseNo));
+  const [presetYear, setPresetYear] = useState(() => getHousePresetYearRange(getHouseDateRange(chamber, houseNo)));
   const [activeTab, setActiveTab] = useState<LegislationTab>('All');
   const [dateStart, setDateStart] = useState('');
   const [dateEnd, setDateEnd] = useState('');

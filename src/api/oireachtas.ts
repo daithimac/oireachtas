@@ -542,7 +542,7 @@ export async function fetchCommitteeDebateIndex(
   houseNo: number,
   signal?: AbortSignal
 ): Promise<CommitteeDebateIndexItem[]> {
-  const range = getHouseDateRange(chamber, houseNo);
+  const range = await fetchHouseDateRange(chamber, houseNo, signal);
   const pageSize = 100;
   const baseParams: Record<string, string | number> = {
     chamber_type: 'committee',
@@ -889,7 +889,7 @@ export async function fetchGlobalLegislation(
   dateEnd?: string,
   scopeToHouse = true
 ): Promise<{ bills: Bill[]; total: number }> {
-  const { start, end } = getHouseDateRange(chamber, houseNo);
+  const { start, end } = await fetchHouseDateRange(chamber, houseNo, signal);
   const params: Record<string, string | number> = {
     limit,
     skip,

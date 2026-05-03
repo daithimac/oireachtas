@@ -4,7 +4,7 @@ import { useAsync } from '../hooks/useAsync';
 import { fetchCommitteeDebateIndex, fetchCommitteeDebateSearch, fetchGlobalDebates, fetchHouseDateRange, type ChamberType, type CommitteeDebateIndexItem } from '../api/oireachtas';
 import type { Chamber, Debate, View } from '../types';
 import { formatDateShort } from '../utils/format';
-import { chamberName } from '../utils/dail';
+import { getHouseDateRange, chamberName } from '../utils/dail';
 import { DEFAULT_PAGE_SIZE } from '../constants';
 
 interface GlobalDebatesListProps {
@@ -78,8 +78,12 @@ function flattenDebates(debates: Debate[]): DebateRow[] {
 export function GlobalDebatesList({ chamber, houseNo, onNavigateToDebate }: GlobalDebatesListProps) {
   const [chamberType, setChamberType] = useState<ChamberType>('house');
   const [committeeCode, setCommitteeCode] = useState('');
-  const [dateStart, setDateStart] = useState('');
-  const [dateEnd, setDateEnd] = useState('');
+  const [dateStart, setDateStart] = useState(() => getHouseDateRange(chamber, houseNo).start);
+  const [dateEnd, setDateEnd] = useState(() => {
+    const r = getHouseDateRange(chamber, houseNo).end;
+    const today = new Date().toISOString().split('T')[0];
+    return r > today ? today : r;
+  });
   const [searchInput, setSearchInput] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
   const [committeeQuery, setCommitteeQuery] = useState('');

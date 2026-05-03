@@ -4,7 +4,7 @@ import { fetchActivitySummary, fetchVoteBreakdown, fetchHouseDateRange } from '.
 import { useAsync } from '../hooks/useAsync';
 import type { ActivitySummary, Chamber, Member, VoteBreakdown, View } from '../types';
 import { formatDateShort, partyColor } from '../utils/format';
-import { getHousePresetYearRange } from '../utils/dail';
+import { getHouseDateRange, getHousePresetYearRange } from '../utils/dail';
 
 interface CompareMembersPageProps {
   chamber: Chamber;
@@ -25,10 +25,10 @@ export function CompareMembersPage({
   const [activeIndex, setActiveIndex] = useState(0);
   const [pickerOpen, setPickerOpen] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
-  const [houseRange, setHouseRange] = useState({ start: '', end: '' });
-  const [yearPresetRange, setYearPresetRange] = useState({ start: '', end: '' });
-  const [dateStart, setDateStart] = useState('');
-  const [dateEnd, setDateEnd] = useState('');
+  const [houseRange, setHouseRange] = useState(() => getHouseDateRange(chamber, houseNo));
+  const [yearPresetRange, setYearPresetRange] = useState(() => getHousePresetYearRange(getHouseDateRange(chamber, houseNo)));
+  const [dateStart, setDateStart] = useState(() => getHouseDateRange(chamber, houseNo).start);
+  const [dateEnd, setDateEnd] = useState(() => getHouseDateRange(chamber, houseNo).end);
 
   useEffect(() => {
     let active = true;

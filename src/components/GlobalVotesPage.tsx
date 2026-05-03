@@ -4,7 +4,7 @@ import { fetchChamberVotes, fetchHouseDateRange } from '../api/oireachtas';
 import type { ChamberType } from '../api/oireachtas';
 import { usePaginatedList } from '../hooks/usePaginatedList';
 import type { Chamber, ChamberVote, View } from '../types';
-import { chamberName } from '../utils/dail';
+import { getHouseDateRange, chamberName } from '../utils/dail';
 import { formatDateShort } from '../utils/format';
 import { viewToHash } from '../utils/routing';
 import { ShareModal } from './ShareModal';
@@ -27,9 +27,9 @@ function outcomeClass(outcome: string): string {
 
 
 export function GlobalVotesPage({ chamber, houseNo, onNavigate }: GlobalVotesPageProps) {
-  const [range, setRange] = useState({ start: '', end: '' });
-  const [dateStart, setDateStart] = useState('');
-  const [dateEnd, setDateEnd] = useState('');
+  const [range, setRange] = useState(() => getHouseDateRange(chamber, houseNo));
+  const [dateStart, setDateStart] = useState(() => getHouseDateRange(chamber, houseNo).start);
+  const [dateEnd, setDateEnd] = useState(() => getHouseDateRange(chamber, houseNo).end);
 
   useEffect(() => {
     let active = true;
