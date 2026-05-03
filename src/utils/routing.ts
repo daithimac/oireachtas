@@ -28,6 +28,27 @@ interface ParsedHash {
   view: View;
 }
 
+export function isHomeView(view: View): boolean {
+  return view.kind === 'home';
+}
+
+export function buildCurrentPageUrl(origin: string, search: string, hash: string): string {
+  return `${origin}${search}${hash}`;
+}
+
+export function resolveGlobalShareUrl(
+  view: View,
+  origin: string,
+  search: string,
+  hash: string,
+): string | null {
+  if (isHomeView(view)) {
+    return null;
+  }
+
+  return buildCurrentPageUrl(origin, search, hash);
+}
+
 export function parseHash(hash: string): ParsedHash {
   // Supported shapes (new):  #/dail/34/...   #/seanad/27/...
   // Supported shape (legacy): #/34/...       (assumed Dáil)

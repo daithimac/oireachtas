@@ -196,6 +196,20 @@ body {
   font-family: var(--fi); font-size: 12px; font-weight: 700; cursor: pointer; transition: var(--t);
 }
 .app-header__nav button:hover { background: rgba(255,255,255,.16); color: #fff; }
+.app-header__share {
+  padding: 7px 12px;
+  border: 1px solid rgba(255,255,255,.16);
+  border-radius: var(--r-pill);
+  background: rgba(255,255,255,.14);
+  color: #fff;
+  font-family: var(--fi);
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: var(--t);
+  flex-shrink: 0;
+}
+.app-header__share:hover { background: rgba(255,255,255,.24); }
 
 /* ── Page scaffold ── */
 .page { flex: 1; animation: fadeUp .3s ease; }
@@ -1850,6 +1864,7 @@ body {
   .app-header__search { order: 3; width: 100%; max-width: none; margin: 0; }
   .app-header__nav { order: 4; width: 100%; }
   .app-header__nav button { flex: 1; }
+  .app-header__share { order: 2; margin-left: auto; }
   .app-header__subtitle-container {
     width: 100%;
     justify-content: space-between;

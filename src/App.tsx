@@ -20,7 +20,8 @@ import { PublicCollectionPage } from './components/PublicCollectionPage';
 import { AttributionFooter } from './components/AttributionFooter';
 import { CommitteePage } from './components/CommitteePage';
 import { PartyBreakdown } from './components/PartyBreakdown';
-import { viewToHash, parseHash } from './utils/routing';
+import { ShareModal } from './components/ShareModal';
+import { viewToHash, parseHash, resolveGlobalShareUrl } from './utils/routing';
 import { formatDateShort, partyColor } from './utils/format';
 
 function latestForChamber(c: Chamber): number {
@@ -181,6 +182,7 @@ export default function App() {
   const [cabinetExpanded, setCabinetExpanded] = useState(false);
   const [constituencies, setConstituencies] = useState<Constituency[]>([]);
   const [allMembers, setAllMembers] = useState<Member[]>([]);
+  const [globalShareOpen, setGlobalShareOpen] = useState(false);
   const [, setLoadingConstituencies] = useState(true);
   const [loadingMembers, setLoadingMembers] = useState(true);
   const [constituenciesError, setConstituenciesError] = useState<string | null>(null);
@@ -313,6 +315,19 @@ export default function App() {
   useEffect(() => {
     setCabinetExpanded(false);
   }, [chamber, houseNo]);
+
+  useEffect(() => {
+    setGlobalShareOpen(false);
+  }, [view, chamber, houseNo]);
+
+  const globalShareUrl = useMemo(() => (
+    resolveGlobalShareUrl(
+      view,
+      window.location.origin,
+      window.location.search,
+      window.location.hash,
+    )
+  ), [view]);
 
   function renderView() {
     if (constituenciesError && view.kind === 'home') {
@@ -767,6 +782,17 @@ export default function App() {
           <button type="button" onClick={() => { navigate({ kind: 'saved' }); }}>Saved</button>
         </nav>
 
+        {globalShareUrl && (
+          <button
+            type="button"
+            className="app-header__share"
+            onClick={() => { setGlobalShareOpen(true); }}
+            aria-label="Share this page"
+          >
+            Share
+          </button>
+        )}
+
         <div className="app-header__subtitle-container">
           <div className="chamber-toggle" role="group" aria-label="Select chamber">
             {(['dail', 'seanad'] as Chamber[]).map((c) => (
@@ -789,6 +815,9 @@ export default function App() {
           </select>
         </div>
       </header>
+      {globalShareOpen && globalShareUrl && (
+        <ShareModal url={globalShareUrl} onClose={() => { setGlobalShareOpen(false); }} />
+      )}
       <main id="main-content" tabIndex={-1}>{renderView()}</main>
       <AttributionFooter />
     </div>
