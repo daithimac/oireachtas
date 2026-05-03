@@ -307,11 +307,12 @@ async function handleShortLinkRedirect(request, env, code) {
   const userAgent = request.headers.get('User-Agent') || '';
   const isBot = /bot|facebook|twitter|whatsapp|telegram|discord|slack|linkedin|preview/i.test(userAgent);
 
-  if (isBot && (entry.title || entry.description)) {
-    const safeTitle = escapeHtml(entry.title || 'Oireachtas Explorer');
-    const safeDesc = escapeHtml(entry.description || '');
+  if (isBot) {
+    const safeTitle = escapeHtml(entry.title || 'Oireachtas Explorer (unofficial)');
+    const safeDesc = escapeHtml(entry.description || 'Unofficial explorer for Irish parliamentary data (Dáil and Seanad) — members, voting records, speeches, and debates.');
     const safeUrl = escapeHtml(shortLinkUrl(request, env, code));
     const safeTarget = escapeHtml(entry.targetUrl);
+    const imageUrl = escapeHtml(`${appBaseUrl(env)}/og-image.png`);
     
     const html = `<!DOCTYPE html>
 <html lang="en">
@@ -321,8 +322,12 @@ async function handleShortLinkRedirect(request, env, code) {
 <meta property="og:title" content="${safeTitle}">
 <meta property="og:description" content="${safeDesc}">
 <meta property="og:url" content="${safeUrl}">
+<meta property="og:image" content="${imageUrl}">
+<meta property="og:image:width" content="1024">
+<meta property="og:image:height" content="1024">
 <meta property="og:type" content="website">
-<meta name="twitter:card" content="summary">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="${imageUrl}">
 <meta http-equiv="refresh" content="0;url=${safeTarget}">
 </head>
 <body>
