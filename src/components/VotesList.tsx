@@ -5,11 +5,13 @@ import type { Chamber, Division } from '../types';
 import { formatDateShort } from '../utils/format';
 import { viewToHash } from '../utils/routing';
 import { fetchDebateTranscript } from '../api/transcripts';
+import type { View } from '../types';
 
 interface VotesListProps {
   memberUri: string;
   chamber: Chamber;
   houseNo: number;
+  onNavigate: (view: View) => void;
 }
 
 // Matches fetchVoteBreakdown's page size so the first-page request URL is
@@ -35,7 +37,7 @@ function outcomeClass(o: string) {
   return '';
 }
 
-export function VotesList({ memberUri, chamber, houseNo }: VotesListProps) {
+export function VotesList({ memberUri, chamber, houseNo, onNavigate }: VotesListProps) {
   const [spokeStatus, setSpokeStatus] = useState<Partial<Record<string, 'loading' | 'spoke' | 'did-not-speak'>>>({});
 
   const fetcher = useCallback((skip: number, limit: number, signal?: AbortSignal) =>
@@ -87,7 +89,13 @@ export function VotesList({ memberUri, chamber, houseNo }: VotesListProps) {
                 {voteIcon(d.voteType)}
               </div>
               <div className="vote-item__body">
-                <div className="vote-item__title">{d.title}</div>
+                <button
+                  type="button"
+                  className="vote-item__title vote-item__title-btn"
+                  onClick={() => { onNavigate({ kind: 'vote-detail', voteUri: d.uri, title: d.title }); }}
+                >
+                  {d.title}
+                </button>
                 <div className="vote-item__meta">
                   <span className="vote-item__date">{formatDateShort(d.date)}</span>
                   {d.outcome && (

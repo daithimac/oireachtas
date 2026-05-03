@@ -7,6 +7,8 @@ export type Chamber = 'dail' | 'seanad';
 export type View =
   | { kind: 'home' }
   | { kind: 'global-debates'; houseNo: number }
+  | { kind: 'global-votes' }
+  | { kind: 'vote-detail'; voteUri: string; title: string }
   | { kind: 'global-legislation' }
   | { kind: 'debate-viewer'; xmlUri: string; debateSectionUri: string; title: string; focusMemberUri?: string; speechIdx?: number }
   | { kind: 'bill-viewer'; billNo: string; billYear: string }
@@ -161,7 +163,17 @@ export interface DebateSectionRaw {
     showAs: string;
     uri: string;
     debateType?: string;
-    bill?: { uri: string | null; showAs: string } | null;
+    bill?: {
+      uri: string | null;
+      showAs?: string;
+      event?: {
+        uri: string;
+        isBillStage: boolean;
+        stage: string;
+        houseCode: string;
+        showAs: string;
+      };
+    } | null;
   };
 }
 
@@ -231,15 +243,19 @@ export interface DivisionResult {
       showAs: string;
     };
     tallies?: {
-      taVotes?: { tally: number; showAs: string };
-      nilVotes?: { tally: number; showAs: string };
-      staonVotes?: { tally: number; showAs: string };
+      taVotes?: { tally: number; showAs: string; members?: { member: { memberCode: string; showAs: string; uri: string } }[] };
+      nilVotes?: { tally: number; showAs: string; members?: { member: { memberCode: string; showAs: string; uri: string } }[] };
+      staonVotes?: { tally: number; showAs: string; members?: { member: { memberCode: string; showAs: string; uri: string } }[] };
     };
     voteId: string;
     isBill: boolean;
     category: string;
+    voteNote?: string;
+    tellers?: string;
   };
 }
+
+export type VoteResult = DivisionResult;
 
 export interface Division {
   uri: string;
@@ -252,6 +268,50 @@ export interface Division {
   tallyAgainst: number;
   xmlUri?: string;
   debateSectionUri?: string;
+}
+
+export interface ChamberVote {
+  uri: string;
+  voteId: string;
+  date: string;
+  datetime: string;
+  title: string;
+  topic: string;
+  category: string;
+  outcome: string;
+  tallyFor: number;
+  tallyAgainst: number;
+  tallyAbstain: number;
+  isBill: boolean;
+  voteNote: string;
+  tellers: string;
+  xmlUri?: string;
+  pdfUri?: string;
+  debateSectionUri?: string;
+  debateUri?: string;
+}
+
+export interface VoteRelatedBill {
+  uri: string;
+  billYear: string;
+  billNo: string;
+  title: string;
+  stage: string;
+}
+
+export interface VoteDebateContext {
+  debateTitle: string;
+  debateSectionTitle: string;
+  debateSectionUri?: string;
+  relatedBill: VoteRelatedBill | null;
+  relatedVotes: ChamberVote[];
+}
+
+export interface VoteMemberSplit {
+  vote: ChamberVote | null;
+  ta: Member[];
+  nil: Member[];
+  staon: Member[];
 }
 
 // ── Parliamentary Question ────────────────────────────────────────────────────

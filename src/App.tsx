@@ -8,6 +8,8 @@ import { MemberGrid } from './components/MemberGrid';
 import { MemberCard } from './components/MemberCard';
 import { MemberProfile } from './components/MemberProfile';
 import { GlobalDebatesList } from './components/GlobalDebatesList';
+import { GlobalVotesPage } from './components/GlobalVotesPage';
+import { VoteDetailPage } from './components/VoteDetailPage';
 import { GlobalLegislationPage } from './components/GlobalLegislationPage';
 import { DebateViewerPage } from './components/DebateViewerPage';
 import { BillViewerPage } from './components/BillViewerPage';
@@ -518,21 +520,39 @@ export default function App() {
               )}
 
               {/* Debates CTA */}
-              <div style={{ marginTop: 48 }}>
-                <div className="section-hd">
-                  <div className="section-title">{label} Debates</div>
-                  <button className="section-link" onClick={() => { navigate({ kind: 'global-debates', houseNo }); }}>
-                    View all →
-                  </button>
+              <div className="home-research-grid">
+                <div>
+                  <div className="section-hd">
+                    <div className="section-title">{label} Debates</div>
+                    <button className="section-link" onClick={() => { navigate({ kind: 'global-debates', houseNo }); }}>
+                      View all →
+                    </button>
+                  </div>
+                  <div className="home-research-panel">
+                    <p>
+                      Read official transcripts from recent plenary and committee debates — speeches, votes and proceedings.
+                    </p>
+                    <button className="bill-pdf-btn" onClick={() => { navigate({ kind: 'global-debates', houseNo }); }}>
+                      Browse All Debates
+                    </button>
+                  </div>
                 </div>
-                <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--r-xl)', padding: '24px', boxShadow: 'var(--sh-sm)' }}>
-                  <p style={{ fontSize: 15, color: 'var(--text2)', lineHeight: 1.6, marginBottom: 20 }}>
-                    Read official transcripts from recent plenary and committee debates — speeches, votes and proceedings.
-                  </p>
-                  <button className="bill-pdf-btn" style={{ width: '100%', justifyContent: 'center' }}
-                    onClick={() => { navigate({ kind: 'global-debates', houseNo }); }}>
-                    Browse All Debates
-                  </button>
+
+                <div>
+                  <div className="section-hd">
+                    <div className="section-title">{label} Votes</div>
+                    <button className="section-link" onClick={() => { navigate({ kind: 'global-votes' }); }}>
+                      View all →
+                    </button>
+                  </div>
+                  <div className="home-research-panel">
+                    <p>
+                      Search chamber votes, filter by date, topic and outcome, and open the Tá/Níl member split for each motion.
+                    </p>
+                    <button className="bill-pdf-btn" onClick={() => { navigate({ kind: 'global-votes' }); }}>
+                      See Votes
+                    </button>
+                  </div>
                 </div>
               </div>
 
@@ -613,6 +633,16 @@ export default function App() {
           </div>
         );
 
+      case 'global-votes':
+        return (
+          <GlobalVotesPage
+            chamber={chamber}
+            houseNo={houseNo}
+            onNavigate={navigate}
+            onBack={handleBack}
+          />
+        );
+
       case 'global-legislation':
         return (
           <GlobalLegislationPage
@@ -691,6 +721,20 @@ export default function App() {
           />
         );
 
+      case 'vote-detail':
+        return (
+          <VoteDetailPage
+            voteUri={view.voteUri}
+            title={view.title}
+            chamber={chamber}
+            houseNo={houseNo}
+            allMembers={allMembers}
+            onBack={handleBack}
+            onSelectMember={handleSelectMember}
+            onNavigate={navigate}
+          />
+        );
+
       case 'bill-viewer':
         return (
           <BillViewerPage
@@ -717,6 +761,7 @@ export default function App() {
         <HeaderSearch onSubmit={(query) => { navigate({ kind: 'search', query }); }} />
 
         <nav className="app-header__nav" aria-label="Research tools">
+          <button type="button" onClick={() => { navigate({ kind: 'global-votes' }); }}>Votes</button>
           <button type="button" onClick={() => { navigate({ kind: 'global-legislation' }); }}>Legislation</button>
           <button type="button" onClick={() => { navigate({ kind: 'compare' }); }}>Compare</button>
           <button type="button" onClick={() => { navigate({ kind: 'saved' }); }}>Saved</button>

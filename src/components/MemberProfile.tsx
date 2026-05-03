@@ -289,7 +289,14 @@ export function MemberProfile({ memberUri, constituencyName, chamber, houseNo, o
               )}
 
               {activeTab === 'debates' && <DebatesList memberUri={memberUri} chamber={chamber} houseNo={houseNo} />}
-              {activeTab === 'votes' && <VotesList memberUri={memberUri} chamber={chamber} houseNo={houseNo} />}
+              {activeTab === 'votes' && (
+                <VotesList
+                  memberUri={memberUri}
+                  chamber={chamber}
+                  houseNo={houseNo}
+                  onNavigate={onNavigate}
+                />
+              )}
               {activeTab === 'questions' && <QuestionsList memberUri={memberUri} chamber={chamber} houseNo={houseNo} />}
               {activeTab === 'legislation' && <BillsList memberUri={memberUri} chamber={chamber} houseNo={houseNo} />}
             </div>

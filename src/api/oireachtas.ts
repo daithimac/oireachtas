@@ -7,7 +7,6 @@ import type {
   CommitteeMembership,
   Member,
   OfficeHolding,
-  DebateResult,
   Debate,
   DivisionResult,
   Division,
@@ -17,10 +16,16 @@ import type {
   Bill,
   ActivitySummary,
   VoteBreakdown,
+  VoteResult,
+  ChamberVote,
+  DebateResult,
+  VoteDebateContext,
+  VoteMemberSplit,
   Chamber,
 } from '../types';
 import { getHouseDateRange, LATEST_DAIL, LATEST_SEANAD } from '../utils/dail';
 import { VOTE_HISTORY_CHUNK_LIMIT } from '../constants';
+import { extractVoteDebateContext, mapVoteResults, splitVoteMembers } from '../utils/votes';
 
 export type ChamberType = 'house' | 'committee' | '';
 
@@ -546,6 +551,94 @@ export async function fetchDivisions(memberUri: string, limit = 50, skip = 0, ch
     };
   });
   return { divisions, total: data.head.counts.resultCount ?? divisions.length };
+}
+
+// ── Chamber votes ─────────────────────────────────────────────────────────────
+
+export async function fetchChamberVotes(
+  limit = 50,
+  skip = 0,
+  chamber: Chamber,
+  houseNo: number,
+  signal?: AbortSignal,
+  dateStart?: string,
+  dateEnd?: string,
+  outcome?: string,
+  chamberType: ChamberType = 'house'
+): Promise<{ votes: ChamberVote[]; total: number }> {
+  const range = getHouseDateRange(chamber, houseNo);
+  const params: Record<string, string | number> = {
+    chamber_type: chamberType,
+    date_start: dateStart ?? range.start,
+    date_end: dateEnd ?? range.end,
+    limit,
+    skip,
+  };
+  if (chamberType === 'house') params.chamber = chamber;
+  if (outcome) params.outcome = outcome;
+
+  const data = await apiFetch<OireachtasResult<VoteResult>>(
+    '/votes',
+    params,
+    signal
+  );
+  const votes = mapVoteResults(data.results);
+  return { votes, total: data.head.counts.resultCount ?? votes.length };
+}
+
+export async function fetchVoteDetail(
+  voteUri: string,
+  allMembers: Member[] = [],
+  signal?: AbortSignal
+): Promise<VoteMemberSplit> {
+  const pageSize = 500;
+  const firstPage = await apiFetch<OireachtasResult<VoteResult>>(
+    '/votes',
+    { vote_id: voteUri, limit: pageSize, skip: 0 },
+    signal
+  );
+  const results = [...firstPage.results];
+  const total = firstPage.head.counts.resultCount ?? results.length;
+
+  for (let skip = pageSize; skip < total; skip += pageSize) {
+    if (signal?.aborted) throw abortError();
+    const page = await apiFetch<OireachtasResult<VoteResult>>(
+      '/votes',
+      { vote_id: voteUri, limit: pageSize, skip },
+      signal
+    );
+    results.push(...page.results);
+  }
+
+  return splitVoteMembers(results, allMembers);
+}
+
+export async function fetchVoteDebateContext(
+  vote: ChamberVote,
+  signal?: AbortSignal
+): Promise<VoteDebateContext> {
+  const [debateData, relatedVoteData] = await Promise.all([
+    vote.debateUri
+      ? apiFetch<OireachtasResult<DebateResult>>(
+        '/debates',
+        { debate_id: vote.debateUri, limit: 1 },
+        signal
+      )
+      : Promise.resolve(null),
+    vote.debateUri
+      ? apiFetch<OireachtasResult<VoteResult>>(
+        '/votes',
+        { debate_id: vote.debateUri, limit: 50 },
+        signal
+      )
+      : Promise.resolve(null),
+  ]);
+
+  return extractVoteDebateContext(
+    vote,
+    debateData?.results[0] ?? null,
+    relatedVoteData ? mapVoteResults(relatedVoteData.results) : []
+  );
 }
 
 // ── Questions ─────────────────────────────────────────────────────────────────

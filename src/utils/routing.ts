@@ -1,11 +1,13 @@
 import type { Chamber, View } from '../types';
-import { LATEST_DAIL, LATEST_SEANAD } from './dail';
+import { LATEST_DAIL, LATEST_SEANAD } from './dail.ts';
 
 export function viewToHash(view: View, chamber: Chamber, houseNo: number): string {
   const base = `#/${chamber}/${houseNo}`;
   switch (view.kind) {
     case 'home': return base;
     case 'global-debates': return `${base}/debates`;
+    case 'global-votes': return `${base}/votes`;
+    case 'vote-detail': return `${base}/vote/${encodeURIComponent(view.voteUri)}/${encodeURIComponent(view.title)}`;
     case 'global-legislation': return `${base}/legislation`;
     case 'debate-viewer': return `${base}/debate/${encodeURIComponent(view.xmlUri)}/${encodeURIComponent(view.debateSectionUri)}/${encodeURIComponent(view.title)}${view.focusMemberUri ? '/' + encodeURIComponent(view.focusMemberUri) : ''}${view.speechIdx !== undefined ? '/' + String(view.speechIdx) : ''}`;
     case 'bill-viewer': return `${base}/bill/${view.billYear}/${view.billNo}`;
@@ -48,6 +50,19 @@ export function parseHash(hash: string): ParsedHash {
 
   if (rest[0] === 'debates') {
     return { chamber, houseNo, view: { kind: 'global-debates', houseNo } };
+  }
+  if (rest[0] === 'votes') {
+    return { chamber, houseNo, view: { kind: 'global-votes' } };
+  }
+  if (rest[0] === 'vote' && rest[1]) {
+    return {
+      chamber, houseNo,
+      view: {
+        kind: 'vote-detail',
+        voteUri: decodeURIComponent(rest[1]),
+        title: decodeURIComponent(rest[2] || 'Vote'),
+      }
+    };
   }
   if (rest[0] === 'legislation') {
     return { chamber, houseNo, view: { kind: 'global-legislation' } };
