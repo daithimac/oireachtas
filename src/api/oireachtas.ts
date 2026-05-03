@@ -113,12 +113,14 @@ async function fetchScopedVotePage(
   houseNo: number,
   limit: number,
   skip: number,
-  signal?: AbortSignal
+  signal?: AbortSignal,
+  query?: string
 ): Promise<{ results: VoteResult[]; total: number }> {
   const pageSize = Math.max(limit, 100);
   const filtered: VoteResult[] = [];
   let rawSkip = 0;
   let rawTotal = Infinity;
+  const normalizedQuery = query ? query.toLowerCase().trim() : '';
 
   while (rawSkip < rawTotal) {
     if (signal?.aborted) throw abortError();
@@ -130,7 +132,24 @@ async function fetchScopedVotePage(
     );
 
     rawTotal = data.head.counts.resultCount ?? data.results.length;
-    filtered.push(...data.results.filter((result) => matchesVoteHouse(result, chamber, houseNo)));
+    let pageResults = data.results.filter((result) => matchesVoteHouse(result, chamber, houseNo));
+
+    if (normalizedQuery) {
+      pageResults = pageResults.filter(result => {
+        const division = result.division;
+        const title = division.debate?.showAs ?? division.subject?.showAs ?? division.voteId;
+        const haystack = [
+          title,
+          division.subject?.showAs ?? '',
+          division.category,
+          division.outcome ?? '',
+          division.voteId,
+        ].join(' ').toLowerCase();
+        return haystack.includes(normalizedQuery);
+      });
+    }
+
+    filtered.push(...pageResults);
 
     rawSkip += pageSize;
   }
@@ -602,7 +621,8 @@ export async function fetchChamberVotes(
   dateStart?: string,
   dateEnd?: string,
   outcome?: string,
-  chamberType: ChamberType = 'house'
+  chamberType: ChamberType = 'house',
+  query?: string
 ): Promise<{ votes: ChamberVote[]; total: number }> {
   const range = getHouseDateRange(chamber, houseNo);
   const params: Record<string, string | number> = {
@@ -620,7 +640,8 @@ export async function fetchChamberVotes(
     houseNo,
     limit,
     skip,
-    signal
+    signal,
+    query
   );
   const votes = mapVoteResults(data.results);
   return { votes, total: data.total };

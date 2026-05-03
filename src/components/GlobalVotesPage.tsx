@@ -24,17 +24,7 @@ function outcomeClass(outcome: string): string {
   return '';
 }
 
-function voteMatchesSearch(vote: ChamberVote, query: string): boolean {
-  if (!query) return true;
-  const haystack = [
-    vote.title,
-    vote.topic,
-    vote.category,
-    vote.outcome,
-    vote.voteId,
-  ].join(' ').toLowerCase();
-  return haystack.includes(query);
-}
+
 
 export function GlobalVotesPage({ chamber, houseNo, onNavigate }: GlobalVotesPageProps) {
   const range = useMemo(() => getHouseDateRange(chamber, houseNo), [chamber, houseNo]);
@@ -43,20 +33,16 @@ export function GlobalVotesPage({ chamber, houseNo, onNavigate }: GlobalVotesPag
   const [outcome, setOutcome] = useState('');
   const [chamberType, setChamberType] = useState<Extract<ChamberType, 'house' | 'committee'>>('house');
   const [query, setQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
   const [shareUrl, setShareUrl] = useState<string | null>(null);
 
   const fetcher = useCallback((skip: number, limit: number, signal?: AbortSignal) =>
-    fetchChamberVotes(limit, skip, chamber, houseNo, signal, dateStart, dateEnd, outcome, chamberType),
-    [chamber, houseNo, dateStart, dateEnd, outcome, chamberType]
+    fetchChamberVotes(limit, skip, chamber, houseNo, signal, dateStart, dateEnd, outcome, chamberType, searchQuery),
+    [chamber, houseNo, dateStart, dateEnd, outcome, chamberType, searchQuery]
   );
 
   const { items: votes, total, loading, error, loadingMore, handleLoadMore } =
     usePaginatedList<ChamberVote>(fetcher, 'votes', PAGE_SIZE);
-
-  const normalizedQuery = query.trim().toLowerCase();
-  const visibleVotes = useMemo(() => votes.filter((vote) =>
-    voteMatchesSearch(vote, normalizedQuery)
-  ), [votes, normalizedQuery]);
 
   const openShare = (vote: ChamberVote) => {
     setShareUrl(window.location.origin + window.location.pathname +
@@ -108,7 +94,13 @@ export function GlobalVotesPage({ chamber, houseNo, onNavigate }: GlobalVotesPag
         <label className="votes-toolbar__search">
           <span>Search</span>
           <input type="search" value={query} placeholder="Search votes..."
-            onChange={(event) => { setQuery(event.target.value); }} />
+            onChange={(event) => { setQuery(event.target.value); }}
+            onKeyDown={(event) => {
+              if (event.key === 'Enter') {
+                setSearchQuery(query);
+              }
+            }}
+          />
         </label>
       </div>
 
@@ -125,13 +117,9 @@ export function GlobalVotesPage({ chamber, houseNo, onNavigate }: GlobalVotesPag
         <div className="empty-state">No votes were found for this date range.</div>
       )}
 
-      {!loading && !error && votes.length > 0 && visibleVotes.length === 0 && (
-        <div className="empty-state">No loaded votes match the current search.</div>
-      )}
-
-      {!loading && !error && visibleVotes.length > 0 && (
+      {!loading && !error && votes.length > 0 && (
         <div className="chamber-vote-list">
-          {visibleVotes.map((vote) => (
+          {votes.map((vote) => (
             <article key={vote.uri} className="chamber-vote-row">
               <button
                 className="chamber-vote-row__main"
