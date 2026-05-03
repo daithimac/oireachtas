@@ -255,10 +255,6 @@ export function VoteDetailPage({ voteUri, title, chamber, houseNo, allMembers, o
             {vote?.topic && <span>{vote.topic}</span>}
           </div>
         </div>
-        <button type="button" className="bill-pdf-btn" onClick={() => { setShareOpen(true); }}>
-          <Share2 size={16} aria-hidden="true" />
-          Share vote
-        </button>
       </div>
 
       {loading && (
