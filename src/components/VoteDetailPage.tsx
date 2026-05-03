@@ -1,5 +1,5 @@
 import { useCallback, useState } from 'react';
-import { ExternalLink, FileText, Library, ScrollText, Share2 } from 'lucide-react';
+import { ExternalLink, FileText, Library, ScrollText } from 'lucide-react';
 import { fetchVoteDebateContext, fetchVoteDetail } from '../api/oireachtas';
 import { useAsync } from '../hooks/useAsync';
 import type { Chamber, Member, View } from '../types';
