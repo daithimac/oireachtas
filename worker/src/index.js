@@ -71,7 +71,7 @@ function appBaseUrl(env) {
 }
 
 function shortLinkBaseUrl(request, env) {
-  const configuredBase = typeof env.SHORTLINK_BASE_URL === 'string' ? env.SHORTLINK_BASE_URL.trim() : '';
+  const configuredBase = typeof env.SHORTLINK_BASE_URL === 'string' ? env.SHORTLINK_BASE_URL.trim() : DEFAULT_SHORTLINK_BASE_URL;
   if (configuredBase) {
     return configuredBase.replace(/\/+$/, '');
   }
