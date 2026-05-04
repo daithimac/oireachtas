@@ -45,6 +45,7 @@ test('short links return Open Graph metadata for regular user agents', async () 
   assert.match(html, /<meta property="og:title" content="Oireachtas Explorer: Dáil Votes">/);
   assert.match(html, /<meta property="og:description" content="Division results and tallies from the 34th Dáil\.">/);
   assert.match(html, /<meta property="og:image" content="https:\/\/oireachtas-explorer\.ie\/og-image\.png">/);
+  assert.match(html, /<meta name="twitter:card" content="summary">/);
 });
 
 test('short links use a trusted custom Open Graph image when provided', async () => {
