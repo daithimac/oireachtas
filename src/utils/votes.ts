@@ -32,9 +32,12 @@ function splitTellerNames(text: string): string[] {
 }
 
 export function parseTellers(tellers: string): { ta: string[]; nil: string[] } {
-  const normalized = tellers.replace(/^Tellers:\s*/i, '').trim();
-  const taMatch = /(?:^|;\s*)Tá,\s*(.*?)(?=;\s*Níl,|$)/i.exec(normalized);
-  const nilMatch = /(?:^|;\s*)Níl,\s*(.*)$/i.exec(normalized);
+  const normalized = tellers
+    .replace(/^Tellers:\s*/i, '')
+    .replace(/^[-—:]\s*/, '')
+    .trim();
+  const taMatch = /(?:^|;\s*)Tá[:,]\s*(.*?)(?=(?:;|\.)?\s*Níl[:,]|$)/i.exec(normalized);
+  const nilMatch = /(?:^|[;.]\s*)Níl[:,]\s*(.*)$/i.exec(normalized);
   return {
     ta: taMatch?.[1] ? splitTellerNames(taMatch[1]) : [],
     nil: nilMatch?.[1] ? splitTellerNames(nilMatch[1]) : [],

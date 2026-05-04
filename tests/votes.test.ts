@@ -213,3 +213,10 @@ test('parses Tá and Níl tellers from the vote teller text', () => {
   assert.deepEqual(parsed.ta, ['Mary Butler', 'Emer Currie']);
   assert.deepEqual(parsed.nil, ['Pádraig Mac Lochlainn', 'Aengus Ó Snodaigh']);
 });
+
+test('parses historical tellers without a semicolon separator', () => {
+  const parsed = parseTellers('Tellers: Tá, Deputies Duggan and P. S. Doyle.  Níl, Deputies Morrissey and Cullen.');
+
+  assert.deepEqual(parsed.ta, ['Duggan', 'P. S. Doyle']);
+  assert.deepEqual(parsed.nil, ['Morrissey', 'Cullen']);
+});
