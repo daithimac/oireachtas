@@ -240,13 +240,13 @@ export interface DivisionResult {
       showAs: string;
     };
     memberTally?: {
-      member: { memberCode: string; showAs: string; uri: string };
+      member: { memberCode: string | null; showAs: string; uri: string | null };
       showAs: string;
     };
     tallies?: {
-      taVotes?: { tally: number; showAs: string; members?: { member: { memberCode: string; showAs: string; uri: string } }[] };
-      nilVotes?: { tally: number; showAs: string; members?: { member: { memberCode: string; showAs: string; uri: string } }[] };
-      staonVotes?: { tally: number; showAs: string; members?: { member: { memberCode: string; showAs: string; uri: string } }[] };
+      taVotes?: { tally: number; showAs: string; members?: { member: { memberCode: string | null; showAs: string; uri: string | null } }[] };
+      nilVotes?: { tally: number; showAs: string; members?: { member: { memberCode: string | null; showAs: string; uri: string | null } }[] };
+      staonVotes?: { tally: number; showAs: string; members?: { member: { memberCode: string | null; showAs: string; uri: string | null } }[] };
     };
     voteId: string;
     isBill: boolean;

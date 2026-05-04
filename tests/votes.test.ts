@@ -91,6 +91,68 @@ test('splits vote detail members from the /votes tallies arrays', () => {
   assert.deepEqual(split.nil.map((member) => member.fullName), ['Bacik, Ivana.']);
 });
 
+test('keeps historical tally members without API member uris and links name matches', () => {
+  const canonicalAiken = {
+    uri: 'https://data.oireachtas.ie/ie/oireachtas/member/id/Frank-Aiken.D.1923-09-19',
+    memberCode: 'Frank-Aiken.D.1923-09-19',
+    fullName: 'Frank Aiken',
+    firstName: 'Frank',
+    lastName: 'Aiken',
+    chamber: 'dail' as const,
+    houseNo: 5,
+    party: 'Fianna Fáil',
+    constituency: 'Louth',
+    constituencyCode: 'Louth',
+    photoUrl: '',
+    hasPhoto: false,
+    offices: [],
+  };
+  const canonicalAnthony = {
+    ...canonicalAiken,
+    uri: 'https://data.oireachtas.ie/ie/oireachtas/member/id/Richard-Sidney-Anthony.D.1927-06-23',
+    memberCode: 'Richard-Sidney-Anthony.D.1927-06-23',
+    fullName: 'Richard Sidney Anthony',
+    firstName: 'Richard Sidney',
+    lastName: 'Anthony',
+    party: 'Labour Party',
+    constituency: 'Cork Borough',
+    constituencyCode: 'Cork-Borough',
+  };
+  const split = splitVoteMembers([
+    voteResult({
+      tallies: {
+        taVotes: {
+          tally: 2,
+          showAs: 'Tá',
+          members: [
+            { member: { memberCode: null, showAs: 'Frank Aiken.', uri: null } },
+            { member: { memberCode: null, showAs: 'Richard Anthony.', uri: null } },
+          ],
+        },
+        nilVotes: {
+          tally: 1,
+          showAs: 'Níl',
+          members: [
+            { member: { memberCode: null, showAs: 'Ernest Henry Alton.', uri: null } },
+          ],
+        },
+        staonVotes: {
+          tally: 0,
+          showAs: 'Staon',
+          members: [],
+        },
+      },
+    }),
+  ], [canonicalAiken, canonicalAnthony]);
+
+  assert.equal(split.ta.length, 2);
+  assert.equal(split.nil.length, 1);
+  assert.equal(split.ta[0].uri, canonicalAiken.uri);
+  assert.equal(split.ta[1].uri, canonicalAnthony.uri);
+  assert.equal(split.nil[0].fullName, 'Ernest Henry Alton.');
+  assert.match(split.nil[0].uri, /^vote-member:/);
+});
+
 test('extracts debate and bill context for a vote debate section', () => {
   const vote = mapVoteResults([
     voteResult({

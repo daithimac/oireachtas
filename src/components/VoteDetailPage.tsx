@@ -70,6 +70,10 @@ function initialsForName(name: string): string {
   return `${parts[0]?.[0] ?? ''}${parts.at(-1)?.[0] ?? ''}`.toUpperCase();
 }
 
+function hasProfileLink(member: Member): boolean {
+  return member.uri.startsWith('https://data.oireachtas.ie/ie/oireachtas/member/');
+}
+
 function VoteMemberCard({
   member,
   onSelectMember,
@@ -80,16 +84,11 @@ function VoteMemberCard({
   const [photoFailed, setPhotoFailed] = useState(false);
   const party = member.party || 'Member';
   const constituency = member.constituency || '';
-
-  return (
-    <button
-      type="button"
-      className="vote-member-card"
-      onClick={() => { onSelectMember(member.uri, member.fullName, member.constituencyCode || 'all', member.constituency || 'Votes'); }}
-      aria-label={`View profile for ${member.fullName}`}
-    >
+  const canOpenProfile = hasProfileLink(member);
+  const content = (
+    <>
       <div className="vote-member-card__photo-wrap">
-        {!photoFailed ? (
+        {member.photoUrl && !photoFailed ? (
           <img
             src={member.photoUrl}
             alt=""
@@ -106,12 +105,35 @@ function VoteMemberCard({
       <div className="vote-member-card__body">
         <strong>{member.fullName}</strong>
         <div className="vote-member-card__meta">
-          <span className="party-badge" style={{ backgroundColor: partyColor(member.party) }}>
-            {party}
-          </span>
+          {member.party ? (
+            <span className="party-badge" style={{ backgroundColor: partyColor(member.party) }}>
+              {party}
+            </span>
+          ) : (
+            <span>{party}</span>
+          )}
           {constituency && <span>{constituency}</span>}
         </div>
       </div>
+    </>
+  );
+
+  if (!canOpenProfile) {
+    return (
+      <div className="vote-member-card vote-member-card--static">
+        {content}
+      </div>
+    );
+  }
+
+  return (
+    <button
+      type="button"
+      className="vote-member-card"
+      onClick={() => { onSelectMember(member.uri, member.fullName, member.constituencyCode || 'all', member.constituency || 'Votes'); }}
+      aria-label={`View profile for ${member.fullName}`}
+    >
+      {content}
     </button>
   );
 }

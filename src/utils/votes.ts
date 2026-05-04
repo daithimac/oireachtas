@@ -1,9 +1,9 @@
 import type { Chamber, ChamberVote, DebateResult, Member, VoteDebateContext, VoteMemberSplit, VoteRelatedBill, VoteResult } from '../types';
 
 interface VoteMemberRef {
-  memberCode: string;
+  memberCode: string | null;
   showAs: string;
-  uri: string;
+  uri: string | null;
 }
 
 export function matchesVoteHouse(result: VoteResult, chamber: Chamber, houseNo: number): boolean {
@@ -127,11 +127,79 @@ function splitDisplayName(showAs: string): { firstName: string; lastName: string
   };
 }
 
+function normalizeVoteMemberName(name: string): string {
+  return name
+    .normalize('NFD')
+    .replace(/\p{Diacritic}/gu, '')
+    .replace(/\([^)]*\)/g, ' ')
+    .replace(/[^\p{Letter}\p{Number}\s']/gu, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .toLowerCase();
+}
+
+function comparableMemberNames(member: Member): string[] {
+  return [
+    member.fullName,
+    `${member.firstName} ${member.lastName}`,
+    `${member.lastName} ${member.firstName}`,
+  ].map(normalizeVoteMemberName).filter(Boolean);
+}
+
+function nameTokens(name: string): string[] {
+  return normalizeVoteMemberName(name).split(' ').filter(Boolean);
+}
+
+function scoreVoteMemberName(rawName: string, member: Member): number {
+  const rawTokens = nameTokens(rawName);
+  const memberTokens = nameTokens(member.fullName);
+  if (rawTokens.length === 0 || memberTokens.length === 0) return 0;
+
+  const rawFirst = rawTokens[0];
+  const memberFirst = memberTokens[0];
+  const rawLast = rawTokens.at(-1);
+  const memberLast = memberTokens.at(-1);
+  let score = 0;
+
+  if (rawLast && memberLast && rawLast === memberLast) score += 50;
+  if (rawFirst === memberFirst) score += 30;
+  else if (rawFirst[0] && memberFirst.startsWith(rawFirst[0])) score += 15;
+
+  for (const token of rawTokens) {
+    if (token.length > 1 && memberTokens.includes(token)) score += 5;
+  }
+
+  return score;
+}
+
+function findCanonicalVoteMember(rawMember: VoteMemberRef, allMembers: Member[]): Member | null {
+  const rawName = normalizeVoteMemberName(rawMember.showAs);
+  if (!rawName) return null;
+  const exact = allMembers.find((member) => comparableMemberNames(member).includes(rawName));
+  if (exact) return exact;
+
+  const ranked = allMembers
+    .map((member) => ({ member, score: scoreVoteMemberName(rawMember.showAs, member) }))
+    .filter((candidate) => candidate.score >= 85)
+    .sort((a, b) => b.score - a.score);
+
+  if (ranked.length === 0) return null;
+  if (ranked.length > 1 && ranked[0].score === ranked[1].score) return null;
+  return ranked[0].member;
+}
+
+function stableVoteMemberUri(rawMember: VoteMemberRef, result: VoteResult): string {
+  if (rawMember.uri) return rawMember.uri;
+  const identity = normalizeVoteMemberName(rawMember.showAs) || rawMember.showAs.trim();
+  return `vote-member:${result.division.uri}:${encodeURIComponent(identity)}`;
+}
+
 function memberFromRaw(rawMember: VoteMemberRef, result: VoteResult): Member {
   const name = splitDisplayName(rawMember.showAs);
+  const uri = stableVoteMemberUri(rawMember, result);
   return {
-    uri: rawMember.uri,
-    memberCode: rawMember.memberCode,
+    uri,
+    memberCode: rawMember.memberCode ?? uri,
     fullName: rawMember.showAs,
     firstName: name.firstName,
     lastName: name.lastName,
@@ -140,8 +208,8 @@ function memberFromRaw(rawMember: VoteMemberRef, result: VoteResult): Member {
     party: '',
     constituency: '',
     constituencyCode: '',
-    photoUrl: `${rawMember.uri}/image/thumb`,
-    hasPhoto: true,
+    photoUrl: rawMember.uri ? `${rawMember.uri}/image/thumb` : '',
+    hasPhoto: Boolean(rawMember.uri),
     offices: [],
   };
 }
@@ -163,7 +231,9 @@ export function splitVoteMembers(results: VoteResult[], allMembers: Member[] = [
   const seen = new Set<string>();
 
   const addMember = (result: VoteResult, rawMember: VoteMemberRef, bucket: 'ta' | 'nil' | 'staon') => {
-    const member = byUri.get(rawMember.uri) ?? memberFromRaw(rawMember, result);
+    const member = (rawMember.uri ? byUri.get(rawMember.uri) : undefined)
+      ?? findCanonicalVoteMember(rawMember, allMembers)
+      ?? memberFromRaw(rawMember, result);
     if (seen.has(`${bucket}:${member.uri}`)) return;
     seen.add(`${bucket}:${member.uri}`);
     split[bucket].push(member);
@@ -182,7 +252,9 @@ export function splitVoteMembers(results: VoteResult[], allMembers: Member[] = [
 
     const tally = result.division.memberTally;
     if (!tally) continue;
-    const member = byUri.get(tally.member.uri) ?? memberFromVoteResult(result);
+    const member = (tally.member.uri ? byUri.get(tally.member.uri) : undefined)
+      ?? findCanonicalVoteMember(tally.member, allMembers)
+      ?? memberFromVoteResult(result);
     const bucket = parseVoteTally(tally.showAs);
     if (!member || seen.has(`${bucket}:${member.uri}`)) continue;
     seen.add(`${bucket}:${member.uri}`);
