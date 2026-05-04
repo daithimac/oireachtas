@@ -305,7 +305,7 @@ async function handleShortLinkRedirect(request, env, code) {
   }
 
   const userAgent = request.headers.get('User-Agent') || '';
-  const isBot = /bot|facebook|twitter|whatsapp|telegram|discord|slack|linkedin|preview/i.test(userAgent);
+  const isBot = /bot|facebook|twitter|linkedin|whatsapp|telegram|discord|slack|preview|bsky|bluesky|pinterest|reddit|tumblr|snapchat|instagram|applebot|googlebot|bingbot|yandex|baiduspider|duckduckbot|nuzzel|mspbot|slackbot|vkshare|tiktok/i.test(userAgent);
 
   if (isBot) {
     const safeTitle = escapeHtml(entry.title || 'Oireachtas Explorer (unofficial)');

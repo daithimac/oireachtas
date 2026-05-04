@@ -22,7 +22,7 @@ import { CommitteePage } from './components/CommitteePage';
 import { PartyBreakdown } from './components/PartyBreakdown';
 import { ShareModal } from './components/ShareModal';
 import { viewToHash, parseHash, resolveGlobalShareUrl } from './utils/routing';
-import { formatDateShort, partyColor, billStatusLabel } from './utils/format';
+import { formatDateShort, partyColor } from './utils/format';
 
 function latestForChamber(c: Chamber): number {
   return c === 'seanad' ? LATEST_SEANAD : LATEST_DAIL;
