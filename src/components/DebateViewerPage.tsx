@@ -37,6 +37,12 @@ function paragraphsToQuote(paragraphs: string[]): string {
   return paragraphs.map(htmlToText).filter(Boolean).join('\n\n');
 }
 
+function truncatePreview(text: string, limit: number): string {
+  const normalized = text.replace(/\s+/g, ' ').trim();
+  if (normalized.length <= limit) return normalized;
+  return `${normalized.slice(0, limit).trimEnd()}…`;
+}
+
 export function DebateViewerPage({ xmlUri, debateSectionUri, title, focusMemberUri, speechIdx, chamber, houseNo, onShareMeta }: DebateViewerPageProps) {
   const [shareContext, setShareContext] = useState<{ url: string; title: string; description: string; imageUrl?: string } | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
@@ -65,8 +71,8 @@ export function DebateViewerPage({ xmlUri, debateSectionUri, title, focusMemberU
     const speakerCount = new Set(segments.map(s => s.speakerName)).size;
     const dateStr = debateDateFromUri(xmlUri);
     onShareMeta({
-      title: `Oireachtas Explorer: ${title}`,
-      description: `${dateStr ? formatDateShort(dateStr) + '. ' : ''}${speakerCount} speaker${speakerCount !== 1 ? 's' : ''}. Full debate transcript.`,
+      title: title,
+      description: `${dateStr ? `${formatDateShort(dateStr)}. ` : ''}${speakerCount} speaker${speakerCount !== 1 ? 's' : ''}. Official debate transcript.`,
     });
   }, [segments, onShareMeta, title, xmlUri]);
 
@@ -211,8 +217,8 @@ export function DebateViewerPage({ xmlUri, debateSectionUri, title, focusMemberU
                     const plainText = paragraphsToQuote(s.paragraphs);
                     setShareContext({
                       url: segUrl,
-                      title: `Oireachtas Explorer: ${s.speakerName} in ${title}`,
-                      description: plainText.slice(0, 160) + (plainText.length > 160 ? '…' : ''),
+                      title: `${s.speakerName} in ${title}`,
+                      description: truncatePreview(plainText, 120),
                       imageUrl: s.memberUri ? getMemberPhotoUrl(s.memberUri) : undefined,
                     });
                   }}

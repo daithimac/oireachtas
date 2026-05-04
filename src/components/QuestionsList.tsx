@@ -314,7 +314,14 @@ function QuestionItem({ q, chamber, houseNo, memberUri }: { q: Question; chamber
 
   return (
     <>
-      {shareOpen && <ShareModal url={shareUrl} title={`Oireachtas Explorer: ${q.questionType} Question${q.department ? ` to ${q.department}` : ''}`} description={q.questionText ? q.questionText.slice(0, 160) + (q.questionText.length > 160 ? '\u2026' : '') : `By ${q.askedBy}${q.department ? ` to ${q.department}` : ''}, ${formatDateShort(q.date)}.`} onClose={() => { setShareOpen(false); }} />}
+      {shareOpen && (
+        <ShareModal
+          url={shareUrl}
+          title={`${q.askedBy}${q.department ? ` to ${q.department}` : ''}`}
+          description={q.questionText ? `${q.questionText.slice(0, 120)}${q.questionText.length > 120 ? '\u2026' : ''}` : `${q.questionType} question, ${formatDateShort(q.date)}.`}
+          onClose={() => { setShareOpen(false); }}
+        />
+      )}
       <div className="qa-card" style={{ position: 'relative' }}>
         <button className="card-link-btn" onClick={() => { setShareOpen(true); }} aria-label="Copy link to this question">
           <Link size={14} />

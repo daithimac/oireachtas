@@ -105,7 +105,7 @@ function viewShareMeta(view: View, chamber: Chamber, houseNo: number): ShareMeta
     case 'vote-detail':
       return { title: `Oireachtas Explorer: ${view.title} vote`, description: `Vote: ${view.title}. Full Tá/Níl breakdown and member tallies.` };
     case 'debate-viewer':
-      return { title: `Oireachtas Explorer: ${view.title}`, description: `Transcript: ${view.title}.` };
+      return { title: view.title, description: 'Official Oireachtas debate transcript.' };
     case 'bill-viewer':
       return { title: `Oireachtas Explorer: Bill ${view.billNo} of ${view.billYear}`, description: `Bill ${view.billNo} of ${view.billYear} — stages, status, and documents.` };
     case 'member':
