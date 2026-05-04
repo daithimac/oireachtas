@@ -1856,6 +1856,7 @@ body {
 .attribution-footer p { max-width: 860px; margin: 0 auto .6rem; }
 .attribution-footer a { color: var(--g600); text-decoration: underline; }
 .attribution-footer__disclaimer { font-size: .72rem; opacity: .75; margin-top: .8rem; }
+.attribution-footer__contact { font-size: .78rem; margin-top: .35rem; opacity: .9; }
 
 /* ── Dail selector (legacy) ── */
 .dail-selector { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }

@@ -53,6 +53,9 @@ export function AttributionFooter() {
         express or implied, to the fullest extent permitted by the Oireachtas
         licence and applicable law.
       </p>
+      <p className="attribution-footer__contact">
+        Contact: <a href="mailto:info@oireachtas-explorer.ie">info@oireachtas-explorer.ie</a>
+      </p>
     </footer>
   );
 }
