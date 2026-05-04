@@ -25,7 +25,7 @@ export function MemberCard({ member, chamber, houseNo, constituencyCode, constit
 
   return (
     <>
-      {shareOpen && <ShareModal url={shareUrl} title={`Oireachtas Explorer: ${member.fullName}`} description={`${member.party}${member.constituency ? `, ${member.constituency}` : ''}.${member.offices.length > 0 ? ` ${member.offices.find((o) => o.current)?.name ?? member.offices[0].name}.` : ''}`} onClose={() => { setShareOpen(false); }} />}
+      {shareOpen && <ShareModal url={shareUrl} title={`Oireachtas Explorer: ${member.fullName}`} description={`${member.party}${member.constituency ? `, ${member.constituency}` : ''}.${member.offices.length > 0 ? ` ${member.offices.find((o) => o.current)?.name ?? member.offices[0].name}.` : ''}`} imageUrl={member.hasPhoto ? member.photoUrl : undefined} onClose={() => { setShareOpen(false); }} />}
       <div className="member-card-wrap">
         <button className="member-card" onClick={onClick} aria-label={label}>
           <div className="member-card__stripe" style={{ background: color }} />

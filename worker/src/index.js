@@ -214,6 +214,35 @@ function sanitizeTargetUrl(rawTargetUrl, env) {
   return { value: targetUrl.toString() };
 }
 
+function sanitizeImageUrl(rawImageUrl, env) {
+  if (!isNonEmptyString(rawImageUrl)) {
+    return { value: undefined };
+  }
+
+  let imageUrl;
+  try {
+    imageUrl = new URL(rawImageUrl.trim());
+  } catch {
+    return { error: 'Invalid imageUrl.' };
+  }
+
+  if (imageUrl.protocol !== 'https:') {
+    return { error: 'Short link images must use HTTPS.' };
+  }
+
+  const appOrigin = appBaseUrl(env);
+  const allowedImageOrigins = new Set([
+    appOrigin,
+    'https://data.oireachtas.ie',
+  ]);
+
+  if (!allowedImageOrigins.has(imageUrl.origin.replace(/\/+$/, ''))) {
+    return { error: 'Short link images must come from a trusted Oireachtas Explorer or Oireachtas source.' };
+  }
+
+  return { value: imageUrl.toString() };
+}
+
 async function allocateShortCode(store, targetUrl) {
   const digest = await sha256Hex(targetUrl);
   const variants = [
@@ -264,6 +293,11 @@ async function handleCreateShortLink(request, env) {
     return json({ error: target.error }, 400, request, env);
   }
 
+  const image = sanitizeImageUrl(body?.imageUrl, env);
+  if (image.error) {
+    return json({ error: image.error }, 400, request, env);
+  }
+
   let code;
   try {
     code = await allocateShortCode(store, target.value);
@@ -275,6 +309,7 @@ async function handleCreateShortLink(request, env) {
     targetUrl: target.value,
     title: typeof body?.title === 'string' ? body.title.slice(0, 200) : undefined,
     description: typeof body?.description === 'string' ? body.description.slice(0, 1000) : undefined,
+    imageUrl: image.value,
     createdAt: new Date().toISOString(),
   };
 
@@ -304,46 +339,48 @@ async function handleShortLinkRedirect(request, env, code) {
     return json({ error: 'Short link not found.' }, 404, request, env);
   }
 
-  const userAgent = request.headers.get('User-Agent') || '';
-  const isBot = /bot|facebook|twitter|linkedin|whatsapp|telegram|discord|slack|preview|bsky|bluesky|pinterest|reddit|tumblr|snapchat|instagram|applebot|googlebot|bingbot|yandex|baiduspider|duckduckbot|nuzzel|mspbot|slackbot|vkshare|tiktok/i.test(userAgent);
+  const safeTitle = escapeHtml(entry.title || 'Oireachtas Explorer (unofficial)');
+  const safeDesc = escapeHtml(entry.description || 'Unofficial explorer for Irish parliamentary data (Dáil and Seanad) — members, voting records, speeches, and debates.');
+  const safeUrl = escapeHtml(shortLinkUrl(request, env, code));
+  const safeTarget = escapeHtml(entry.targetUrl);
+  const fallbackImageUrl = `${appBaseUrl(env)}/og-image.png`;
+  const imageUrl = escapeHtml(entry.imageUrl || fallbackImageUrl);
+  const fallbackImageMeta = entry.imageUrl && entry.imageUrl !== fallbackImageUrl
+    ? `<meta property="og:image" content="${escapeHtml(fallbackImageUrl)}">`
+    : '';
 
-  if (isBot) {
-    const safeTitle = escapeHtml(entry.title || 'Oireachtas Explorer (unofficial)');
-    const safeDesc = escapeHtml(entry.description || 'Unofficial explorer for Irish parliamentary data (Dáil and Seanad) — members, voting records, speeches, and debates.');
-    const safeUrl = escapeHtml(shortLinkUrl(request, env, code));
-    const safeTarget = escapeHtml(entry.targetUrl);
-    const imageUrl = escapeHtml(`${appBaseUrl(env)}/og-image.png`);
-    
-    const html = `<!DOCTYPE html>
+  const html = `<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
 <title>${safeTitle}</title>
+<meta name="description" content="${safeDesc}">
 <meta property="og:title" content="${safeTitle}">
 <meta property="og:description" content="${safeDesc}">
 <meta property="og:url" content="${safeUrl}">
 <meta property="og:image" content="${imageUrl}">
+${fallbackImageMeta}
 <meta property="og:image:width" content="1024">
 <meta property="og:image:height" content="1024">
 <meta property="og:type" content="website">
 <meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="${safeTitle}">
+<meta name="twitter:description" content="${safeDesc}">
 <meta name="twitter:image" content="${imageUrl}">
 <meta http-equiv="refresh" content="0;url=${safeTarget}">
+<script>window.location.replace(${JSON.stringify(entry.targetUrl)});</script>
 </head>
 <body>
   <p>Redirecting to <a href="${safeTarget}">${safeTarget}</a>...</p>
 </body>
 </html>`;
-    return new Response(html, {
-      status: 200,
-      headers: {
-        'Content-Type': 'text/html; charset=utf-8',
-        'Cache-Control': 'public, max-age=300',
-      },
-    });
-  }
-
-  return Response.redirect(entry.targetUrl, 302);
+  return new Response(request.method === 'HEAD' ? null : html, {
+    status: 200,
+    headers: {
+      'Content-Type': 'text/html; charset=utf-8',
+      'Cache-Control': 'public, max-age=300',
+    },
+  });
 }
 
 async function handleCreateCollection(request, env) {
@@ -529,7 +566,7 @@ export default {
 
     const shortlinkMatch = url.pathname.match(/^\/s\/([a-f0-9-]+)$/);
     if (shortlinkMatch) {
-      if (request.method !== 'GET') {
+      if (request.method !== 'GET' && request.method !== 'HEAD') {
         return json({ error: 'Method not allowed.' }, 405, request, env);
       }
       return handleShortLinkRedirect(request, env, shortlinkMatch[1]);

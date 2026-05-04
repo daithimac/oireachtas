@@ -16,7 +16,7 @@ interface VoteDetailPageProps {
   allMembers: Member[];
   onSelectMember: (memberUri: string, memberName: string, constituencyCode: string, constituencyName: string) => void;
   onNavigate: (view: View) => void;
-  onShareMeta?: (meta: { title: string; description: string }) => void;
+  onShareMeta?: (meta: { title: string; description: string; imageUrl?: string }) => void;
 }
 
 function outcomeClass(outcome: string): string {

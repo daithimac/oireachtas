@@ -19,7 +19,7 @@ interface DebateViewerPageProps {
   chamber: Chamber;
   houseNo: number;
   onNavigateMember?: (view: View) => void;
-  onShareMeta?: (meta: { title: string; description: string }) => void;
+  onShareMeta?: (meta: { title: string; description: string; imageUrl?: string }) => void;
 }
 
 function htmlToText(html: string): string {
@@ -38,7 +38,7 @@ function paragraphsToQuote(paragraphs: string[]): string {
 }
 
 export function DebateViewerPage({ xmlUri, debateSectionUri, title, focusMemberUri, speechIdx, chamber, houseNo, onShareMeta }: DebateViewerPageProps) {
-  const [shareContext, setShareContext] = useState<{ url: string; title: string; description: string } | null>(null);
+  const [shareContext, setShareContext] = useState<{ url: string; title: string; description: string; imageUrl?: string } | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [speakerFilter, setSpeakerFilter] = useState('');
   const [copiedId, setCopiedId] = useState<string | null>(null);
@@ -121,7 +121,7 @@ export function DebateViewerPage({ xmlUri, debateSectionUri, title, focusMemberU
 
   return (
     <div style={{ maxWidth: '800px', margin: '0 auto', padding: '2rem 1rem' }}>
-      {shareContext && <ShareModal url={shareContext.url} title={shareContext.title} description={shareContext.description} onClose={() => { setShareContext(null); }} />}
+      {shareContext && <ShareModal url={shareContext.url} title={shareContext.title} description={shareContext.description} imageUrl={shareContext.imageUrl} onClose={() => { setShareContext(null); }} />}
 
       <div className="record-title-row">
         <h1 style={{ fontSize: '2rem', marginBottom: '1rem', color: 'var(--color-text-primary)', overflowWrap: 'break-word', wordBreak: 'break-word' }}>{title}</h1>
@@ -213,6 +213,7 @@ export function DebateViewerPage({ xmlUri, debateSectionUri, title, focusMemberU
                       url: segUrl,
                       title: `Oireachtas Explorer: ${s.speakerName} in ${title}`,
                       description: plainText.slice(0, 160) + (plainText.length > 160 ? '…' : ''),
+                      imageUrl: s.memberUri ? getMemberPhotoUrl(s.memberUri) : undefined,
                     });
                   }}
                   aria-label={`Copy link to ${s.speakerName}'s contribution`}

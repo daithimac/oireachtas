@@ -14,7 +14,7 @@ interface CommitteePageProps {
   allMembers: Member[];
   loadingAllMembers: boolean;
   onSelectMember: (memberUri: string, memberName: string, constituencyCode: string, constituencyName: string, targetChamber?: Chamber, targetHouseNo?: number) => void;
-  onShareMeta?: (meta: { title: string; description: string }) => void;
+  onShareMeta?: (meta: { title: string; description: string; imageUrl?: string }) => void;
 }
 
 const ROLE_ORDER: Record<string, number> = {

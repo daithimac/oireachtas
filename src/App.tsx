@@ -86,7 +86,13 @@ function ordinalSuffix(value: number): string {
   }
 }
 
-function viewShareMeta(view: View, chamber: Chamber, houseNo: number): { title: string; description: string } {
+interface ShareMeta {
+  title: string;
+  description: string;
+  imageUrl?: string;
+}
+
+function viewShareMeta(view: View, chamber: Chamber, houseNo: number): ShareMeta {
   const chamberLabel = chamberName(chamber);
   const ord = `${houseNo}${ordinalSuffix(houseNo)}`;
   switch (view.kind) {
@@ -220,7 +226,7 @@ export default function App() {
   const [constituencies, setConstituencies] = useState<Constituency[]>([]);
   const [allMembers, setAllMembers] = useState<Member[]>([]);
   const [globalShareOpen, setGlobalShareOpen] = useState(false);
-  const [globalShareMetaOverride, setGlobalShareMetaOverride] = useState<{ title: string; description: string } | null>(null);
+  const [globalShareMetaOverride, setGlobalShareMetaOverride] = useState<ShareMeta | null>(null);
   const [, setLoadingConstituencies] = useState(true);
   const [loadingMembers, setLoadingMembers] = useState(true);
   const [constituenciesError, setConstituenciesError] = useState<string | null>(null);
@@ -853,7 +859,7 @@ export default function App() {
       )}
       {globalShareOpen && globalShareUrl && (() => {
         const meta = globalShareMetaOverride ?? viewShareMeta(view, chamber, houseNo);
-        return <ShareModal url={globalShareUrl} title={meta.title} description={meta.description} onClose={() => { setGlobalShareOpen(false); }} />;
+        return <ShareModal url={globalShareUrl} title={meta.title} description={meta.description} imageUrl={meta.imageUrl} onClose={() => { setGlobalShareOpen(false); }} />;
       })()}
       <main id="main-content" tabIndex={-1}>{renderView()}</main>
       <AttributionFooter />

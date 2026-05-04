@@ -141,6 +141,7 @@ function memberFromRaw(rawMember: VoteMemberRef, result: VoteResult): Member {
     constituency: '',
     constituencyCode: '',
     photoUrl: `${rawMember.uri}/image/thumb`,
+    hasPhoto: true,
     offices: [],
   };
 }

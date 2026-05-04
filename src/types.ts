@@ -144,6 +144,7 @@ export interface Member {
   constituency: string;
   constituencyCode: string;
   photoUrl: string;
+  hasPhoto: boolean;
   offices: OfficeHolding[];
   committees?: CommitteeMembership[];
 }

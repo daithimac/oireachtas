@@ -180,7 +180,7 @@ export async function fetchHouseDateRange(chamber: Chamber, houseNo: number, sig
         end: range.end ?? new Date().toISOString().split('T')[0],
       };
     }
-  } catch (e) {
+  } catch {
     // Ignore error and fall back to getHouseDateRange
   }
   return getHouseDateRange(chamber, houseNo);
@@ -332,6 +332,9 @@ function extractOffices(memberships: MembershipRaw[], chamber: Chamber, houseNo:
 function toMember(r: MemberResult, chamber?: Chamber, houseNo?: number, houseRange?: {start: string, end: string}): Member {
   const m = r.member;
   const c = extractConstituency(m.memberships);
+  const activeRange = chamber !== undefined && houseNo !== undefined
+    ? houseRange ?? getHouseDateRange(chamber, houseNo)
+    : undefined;
   return {
     uri: m.uri,
     memberCode: m.memberCode,
@@ -340,14 +343,15 @@ function toMember(r: MemberResult, chamber?: Chamber, houseNo?: number, houseRan
     lastName: m.lastName,
     chamber: chamber ?? 'dail',
     houseNo: houseNo ?? defaultHouseNo(chamber ?? 'dail'),
-    party: chamber !== undefined && houseNo !== undefined
-      ? extractParty(m.memberships, chamber, houseNo, houseRange!)
+    party: chamber !== undefined && houseNo !== undefined && activeRange
+      ? extractParty(m.memberships, chamber, houseNo, activeRange)
       : 'Independent',
     constituency: c.name,
     constituencyCode: c.code,
     photoUrl: getMemberPhotoUrl(m.uri),
-    offices: chamber !== undefined && houseNo !== undefined
-      ? extractOffices(m.memberships, chamber, houseNo, houseRange!)
+    hasPhoto: Boolean(m.image),
+    offices: chamber !== undefined && houseNo !== undefined && activeRange
+      ? extractOffices(m.memberships, chamber, houseNo, activeRange)
       : [],
     committees: chamber !== undefined && houseNo !== undefined
       ? extractCommittees(m.memberships, chamber, houseNo)

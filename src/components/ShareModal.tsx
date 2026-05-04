@@ -6,10 +6,11 @@ interface ShareModalProps {
   url: string;
   title?: string;
   description?: string;
+  imageUrl?: string;
   onClose: () => void;
 }
 
-export function ShareModal({ url, title, description, onClose }: ShareModalProps) {
+export function ShareModal({ url, title, description, imageUrl, onClose }: ShareModalProps) {
   const [copied, setCopied] = useState(false);
   const [displayUrl, setDisplayUrl] = useState(url);
   const shortLinksEnabled = isShortLinksEnabled();
@@ -31,7 +32,7 @@ export function ShareModal({ url, title, description, onClose }: ShareModalProps
     }
 
     setLoadingShortLink(true);
-    void resolveShareUrl(url, title, description)
+    void resolveShareUrl(url, title, description, imageUrl)
       .then((resolvedUrl) => {
         if (!cancelled) setDisplayUrl(resolvedUrl);
       })
@@ -40,14 +41,14 @@ export function ShareModal({ url, title, description, onClose }: ShareModalProps
       });
 
     return () => { cancelled = true; };
-  }, [url, title, description, shortLinksEnabled]);
+  }, [url, title, description, imageUrl, shortLinksEnabled]);
 
   const handleCopy = () => {
     const finish = () => {
       setCopied(true);
       setTimeout(() => { setCopied(false); }, 2000);
     };
-    copyShareUrl(url, title, description).then((resolvedUrl) => {
+    copyShareUrl(url, title, description, imageUrl).then((resolvedUrl) => {
       setDisplayUrl(resolvedUrl);
       finish();
     }).catch(finish);

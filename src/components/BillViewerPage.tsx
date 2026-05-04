@@ -14,7 +14,7 @@ interface BillViewerPageProps {
   chamber: Chamber;
   houseNo: number;
   allMembers: Member[];
-  onShareMeta?: (meta: { title: string; description: string }) => void;
+  onShareMeta?: (meta: { title: string; description: string; imageUrl?: string }) => void;
 }
 
 export function BillViewerPage({ billNo, billYear, chamber, houseNo, allMembers, onShareMeta }: BillViewerPageProps) {

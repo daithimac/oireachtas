@@ -20,7 +20,7 @@ interface MemberProfileProps {
   chamber: Chamber;
   houseNo: number;
   onNavigate: (view: View) => void;
-  onShareMeta?: (meta: { title: string; description: string }) => void;
+  onShareMeta?: (meta: { title: string; description: string; imageUrl?: string }) => void;
 }
 
 function memberSince(memberCode: string): string {
@@ -118,6 +118,7 @@ export function MemberProfile({ memberUri, constituencyName, chamber, houseNo, o
     onShareMeta({
       title: `Oireachtas Explorer: ${member.fullName}`,
       description: `${member.party} · ${member.constituency}.${currentOffice ? ` ${currentOffice.name}.` : ''} Votes, speeches, questions and bills.`,
+      imageUrl: member.hasPhoto ? member.photoUrl : undefined,
     });
   }, [member, onShareMeta]);
 
