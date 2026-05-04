@@ -196,6 +196,11 @@ body {
   font-family: var(--fi); font-size: 12px; font-weight: 700; cursor: pointer; transition: var(--t);
 }
 .app-header__nav button:hover { background: rgba(255,255,255,.16); color: #fff; }
+.app-header__nav button[aria-current="page"] {
+  background: rgba(255,255,255,.22);
+  color: #fff;
+  border-color: rgba(255,255,255,.35);
+}
 /* ── Page scaffold ── */
 .page { flex: 1; animation: fadeUp .3s ease; }
 .container {
@@ -378,7 +383,7 @@ body {
 .section-link:hover { color: var(--g800); }
 .home-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 48px; margin-top: 48px; }
 .cabinet-grid {
-  display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 10px;
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr)); gap: 10px;
 }
 .cabinet-card {
   display: flex; align-items: center; gap: 14px; padding: 14px 16px; width: 100%;
@@ -1862,9 +1867,12 @@ body {
   .home-research-grid { grid-template-columns: 1fr; }
   .profile-layout { flex-direction: column; }
   .profile-sidebar { width: 100%; position: static; }
+  .profile-stats { grid-template-columns: repeat(4, 1fr); }
   .profile-main { width: 100%; max-width: 100%; }
   .act-grid { grid-template-columns: repeat(2,1fr); }
   .compare-controls { grid-template-columns: 1fr; }
+  .compare-picker { max-width: none; }
+  .compare-grid { grid-template-columns: 1fr; }
   .questions-insights__grid { grid-template-columns: 1fr; }
   .section-hd--stack-mobile { align-items: flex-start; gap: 10px; flex-direction: column; }
   .section-actions { justify-content: flex-start; }
@@ -1881,6 +1889,8 @@ body {
   .vote-detail-hero { flex-direction: column; }
   .vote-tellers__grid { grid-template-columns: 1fr; }
   .related-votes__list button { grid-template-columns: 1fr; align-items: start; }
+  .compare-date-filter__inputs { grid-template-columns: 1fr; }
+  .compare-picker__results { max-height: 200px; }
 }
 @media (max-width: 640px) {
   .app-header {
@@ -1890,11 +1900,19 @@ body {
     gap: 12px;
   }
   .app-header__search { order: 3; width: 100%; max-width: none; margin: 0; }
-  .app-header__nav { order: 4; width: 100%; }
-  .app-header__nav button { flex: 1; }
+  .app-header__nav {
+    order: 4;
+    width: 100%;
+    overflow-x: auto;
+    padding-bottom: 2px;
+    scrollbar-width: none;
+  }
+  .app-header__nav::-webkit-scrollbar { display: none; }
+  .app-header__nav button { flex: 1 0 max-content; min-height: 44px; padding: 10px 14px; }
   .app-header__subtitle-container {
     width: 100%;
     justify-content: space-between;
+    order: 5;
   }
   .page-action-bar {
     top: 124px;
@@ -1904,10 +1922,16 @@ body {
   }
   .app-header__title { font-size: 16px; }
   .hero h1 { font-size: 30px; }
-  .stats-bar { flex-wrap: wrap; }
-  .stat-item { flex: 1 0 45%; border-right: none; border-bottom: 1px solid var(--border); }
+  .hero { padding: 40px 16px 36px; }
+  .hero-sub { margin-bottom: 28px; }
+  .stats-bar { flex-direction: column; }
+  .stat-item { padding: 14px 20px; border-right: none; border-bottom: 1px solid var(--border); }
+  .stat-item:last-child { border-bottom: none; }
   .member-grid { grid-template-columns: repeat(2,1fr); padding: 16px; }
-  .filter-bar { padding: 14px; }
+  .filter-bar { padding: 14px; gap: 10px; }
+  .filter-group { flex: 0 0 100%; min-width: 0; }
+  .filter-group:not(.filter-search):has(input[type="date"]) { flex-basis: calc(50% - 5px); }
+  .filter-search { min-width: 0; }
   .home-legislation-panel { align-items: stretch; flex-direction: column; }
   .votes-toolbar { grid-template-columns: 1fr; }
   .home-legislation-panel .bill-pdf-btn { justify-content: center; }
@@ -1918,8 +1942,19 @@ body {
   .member-profile__meta { justify-content: center; }
   .member-profile__offices { justify-content: center; }
   .picker__title { font-size: 28px; }
-  .tab-btn { padding: 10px 14px; font-size: 13px; }
+  .tab-btn { min-height: 44px; padding: 10px 14px; font-size: 13px; }
   .tab-btn__icon { display: none; }
+  .type-filter-btn,
+  .transcript-btn {
+    min-height: 44px;
+    padding-top: 10px;
+    padding-bottom: 10px;
+  }
+  .vote-detail-summary { gap: 8px; }
+  .vote-detail-summary div { flex: 1 1 calc(50% - 4px); padding: 12px 14px; }
+  .vote-detail-summary strong { font-size: 24px; }
+  .vote-member-card { padding: 10px 12px; }
+  .overview-subtitle { margin-top: 16px; }
 }
 @media (max-width: 400px) {
   .member-grid { grid-template-columns: 1fr; }

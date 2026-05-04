@@ -814,10 +814,10 @@ export default function App() {
         <HeaderSearch onSubmit={(query) => { navigate({ kind: 'search', query }); }} />
 
         <nav className="app-header__nav" aria-label="Research tools">
-          <button type="button" onClick={() => { navigate({ kind: 'global-votes' }); }}>Votes</button>
-          <button type="button" onClick={() => { navigate({ kind: 'global-legislation' }); }}>Legislation</button>
-          <button type="button" onClick={() => { navigate({ kind: 'compare' }); }}>Compare</button>
-          <button type="button" onClick={() => { navigate({ kind: 'saved' }); }}>Saved</button>
+          <button type="button" aria-current={view.kind === 'global-votes' || view.kind === 'vote-detail' ? 'page' : undefined} onClick={() => { navigate({ kind: 'global-votes' }); }}>Votes</button>
+          <button type="button" aria-current={view.kind === 'global-legislation' || view.kind === 'bill-viewer' ? 'page' : undefined} onClick={() => { navigate({ kind: 'global-legislation' }); }}>Legislation</button>
+          <button type="button" aria-current={view.kind === 'compare' ? 'page' : undefined} onClick={() => { navigate({ kind: 'compare' }); }}>Compare</button>
+          <button type="button" aria-current={view.kind === 'saved' ? 'page' : undefined} onClick={() => { navigate({ kind: 'saved' }); }}>Saved</button>
         </nav>
 
         <div className="app-header__subtitle-container">
