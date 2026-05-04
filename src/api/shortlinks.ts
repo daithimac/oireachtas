@@ -44,7 +44,8 @@ export async function createShortLink(targetUrl: string, title?: string, descrip
     throw new ShortLinkError('Missing target URL for short link creation.');
   }
 
-  const cached = shortLinkCache.get(normalizedTarget);
+  const cacheKey = `${normalizedTarget}\0${title ?? ''}\0${description ?? ''}`;
+  const cached = shortLinkCache.get(cacheKey);
   if (cached) return cached;
 
   const request = (async () => {
@@ -62,9 +63,9 @@ export async function createShortLink(targetUrl: string, title?: string, descrip
     return await response.json() as ShortLinkResponse;
   })();
 
-  shortLinkCache.set(normalizedTarget, request);
+  shortLinkCache.set(cacheKey, request);
   void request.catch(() => {
-    shortLinkCache.delete(normalizedTarget);
+    shortLinkCache.delete(cacheKey);
   });
   return request;
 }
