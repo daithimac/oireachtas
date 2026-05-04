@@ -40,7 +40,7 @@ export function ShareModal({ url, title, description, onClose }: ShareModalProps
       });
 
     return () => { cancelled = true; };
-  }, [url, shortLinksEnabled]);
+  }, [url, title, description, shortLinksEnabled]);
 
   const handleCopy = () => {
     const finish = () => {
